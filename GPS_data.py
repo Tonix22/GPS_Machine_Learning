@@ -1,3 +1,7 @@
+#name: Emilio Tonix Gleason
+#python version 3.6
+#email: emiliotonix@gmail.com
+
 import sys
 import numpy as np
 import pandas as pd

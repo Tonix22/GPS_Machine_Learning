@@ -13,16 +13,18 @@ import seaborn as sns
 import math
 from scipy.stats import norm
 
-
-VEHICULE_ID = 153
+ORIGINAL_DATA = 'Data/Vehicle_GPS_Data__Department_of_Public_Services.csv'
+SELECT_FILTER = 'filtered/40/FROM_0_TO_128.csv'
+VEHICULE_ID = 40
 START_DATA  = 0
-END_DATA    = 1100
+END_DATA    = -1
 THRESHOLD_DIFF = .020
+PLT_ENABLE = False
 
 class DATA_ANALYSIS():
     def __init__(self):
         #read data csv
-        self.df = pd.read_csv('Data/Vehicle_GPS_Data__Department_of_Public_Services.csv')
+        self.df = pd.read_csv(ORIGINAL_DATA)
         self.filter_by_name = None
         self.diff_threshold = THRESHOLD_DIFF
         self.vehicule_id    = VEHICULE_ID
@@ -37,9 +39,9 @@ class DATA_ANALYSIS():
         self.filter_by_name = self.df[self.f1][BEGIN:self.df[self.f1].shape[0]]
         #print(self.filter_by_name)
 
-    def save_filter_data(self,name):
+    def save_filter_data(self,name,begin,end):
         #save filter data in csv
-        self.filter_by_name.to_csv(name)
+        self.filter_by_name.iloc[begin:end].to_csv(name)
         
     def plot_speed_wind(self):
         #Get wind data and transform it to angle
@@ -93,7 +95,7 @@ class DATA_ANALYSIS():
                 #self.filter_by_name.drop(self.filter_by_name.index[i])
                 print("new data")
                 end   = i
-                self.save_filter_data("filtered/{ID}/FROM_{START}_TO_{END}.csv".format(ID = self.vehicule_id,START=start,END=end))
+                self.save_filter_data("filtered/{ID}/FROM_{START}_TO_{END}.csv".format(ID = self.vehicule_id,START=start,END=end),start,end)
                 start = end
             
             if(i%100 == 0):
@@ -104,39 +106,41 @@ class DATA_ANALYSIS():
                 mu, std = norm.fit(diffs[b:i])
                 mu = self.diff_threshold
                 # Plot the histogram
-                #plt.hist(diffs[b:i], bins=25, density=True, alpha=0.6, color='g')
+                if(PLT_ENABLE == True):
+                    plt.hist(diffs[b:i], bins=25, density=True, alpha=0.6, color='g')
                 #fit PDF curve
                 xmin, xmax = mu-4*std,mu+4*std
                 x = np.linspace(xmin, xmax, 100)
                 normal_dist = norm.pdf(x, mu, std)
                 self.diff_threshold = x[95]
-                #print("diff: "+str(x[95]))
-                #print("MAX_PDF: "+ str(normal_dist[95]))
-
-                # Plot the PDF.
-                #plt.plot(x, normal_dist, 'k', linewidth=2)
-                #title = "Fit results: avg = %.5f,  std = %.5f" % (mu, std)
-                #plt.title(title)
-                #plt.show()
+                if(PLT_ENABLE == True):
+                    print("diff: "+str(x[95]))
+                    print("MAX_PDF: "+ str(normal_dist[95]))
+                    #Plot the PDF.
+                    plt.plot(x, normal_dist, 'k', linewidth=2)
+                    title = "Fit results: avg = %.5f,  std = %.5f" % (mu, std)
+                    plt.title(title)
+                    plt.show()
                 
 
         end = size_of_arr-1
-        self.save_filter_data("filtered/{ID}/FROM_{START}_TO_{END}.csv".format(ID = self.vehicule_id,START=start,END=end))
-        #xi = list(range(len(self.filter_by_name)-1))
-        #plt.plot(xi,diffs, 'b') # Draw blue line
-        #plt.show()
+        self.save_filter_data("filtered/{ID}/FROM_{START}_TO_{END}.csv".format(ID = self.vehicule_id,START=start,END=end),start,end)
+        if(PLT_ENABLE == True):
+            xi = list(range(len(self.filter_by_name)-1))
+            plt.plot(xi,diffs, 'b') # Draw blue line
+            plt.show()
 
-    def Driving_Reason(self):
-        reasons = self.df['REASONS'] != '12,9'
-        reasons = reasons.to_numpy()
+    def Driving_Reason(self,begin,end):
+        reasons = self.df['REASONS'].to_numpy()
         reasons = np.array(reasons, dtype=int)
-        counts  = np.bincount(reasons[0:100])
+
+        counts  = np.bincount(reasons[begin:end])
         max_repeated_value = np.argmax(counts)
         #avg and std model
-        mu, std = norm.fit(reasons[0:100])
+        mu, std = norm.fit(reasons[begin:end])
         #mu = max_repeated_value
         # Plot the histogram
-        plt.hist(reasons[0:100], bins=25, density=True, alpha=0.6, color='g')
+        plt.hist(reasons[begin:end], bins=25, density=True, alpha=0.6, color='g')
         #fit PDF curve
         xmin, xmax = plt.xlim()
         x = np.linspace(xmin, xmax, 100)
@@ -167,6 +171,9 @@ class DATA_ANALYSIS():
 
 set = DATA_ANALYSIS()
 
+#default
+set.filter_ID(VEHICULE_ID,0,100)
+
 #filter all data set
 if("generate" in sys.argv):
     for n in set.all_ids:
@@ -186,7 +193,7 @@ if("diffs" in sys.argv):
     set.densisty_coord()
 
 if("reasons" in sys.argv):
-    set.Driving_Reason()
+    set.Driving_Reason(0,set.df[set.f1].shape[0])
 
 if("save" in sys.argv):
-    set.save_filter_data("filtered/Vehicule_ID_{ID}_FROM_{START}_TO_{END}.csv".format(ID = VEHICULE_ID,START=START_DATA,END=END_DATA))
+    set.save_filter_data("filtered/Vehicule_ID_{ID}_FROM_{START}_TO_{END}.csv".format(ID = VEHICULE_ID,START=START_DATA,END=END_DATA),START_DATA,100)

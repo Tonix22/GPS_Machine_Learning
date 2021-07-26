@@ -15,11 +15,11 @@ from scipy.stats import norm
 
 ORIGINAL_DATA = 'Data/Vehicle_GPS_Data__Department_of_Public_Services.csv'
 SELECT_FILTER = 'filtered/40/FROM_0_TO_128.csv'
-VEHICULE_ID = 40
+VEHICULE_ID = 153
 START_DATA  = 0
 END_DATA    = -1
 THRESHOLD_DIFF = .020
-PLT_ENABLE = False
+PLT_ENABLE = True
 
 class DATA_ANALYSIS():
     def __init__(self):
@@ -36,7 +36,8 @@ class DATA_ANALYSIS():
         self.df = self.df.sort_values(by=['TIME']) # sort data by time
         print("self.df size: " + str(self.df[self.f1].shape[0]))
         #filter by VEHICULE_ID
-        self.filter_by_name = self.df[self.f1][BEGIN:self.df[self.f1].shape[0]]
+        #self.filter_by_name = self.df[self.f1][BEGIN:self.df[self.f1].shape[0]]
+        self.filter_by_name = self.df[self.f1][BEGIN:END]
         #print(self.filter_by_name)
 
     def save_filter_data(self,name,begin,end):
@@ -94,9 +95,9 @@ class DATA_ANALYSIS():
             if(diffs[i] > self.diff_threshold):
                 #self.filter_by_name.drop(self.filter_by_name.index[i])
                 print("new data")
-                end   = i
-                self.save_filter_data("filtered/{ID}/FROM_{START}_TO_{END}.csv".format(ID = self.vehicule_id,START=start,END=end),start,end)
-                start = end
+                #end   = i
+                #self.save_filter_data("filtered/{ID}/FROM_{START}_TO_{END}.csv".format(ID = self.vehicule_id,START=start,END=end),start,end)
+                #start = end
             
             if(i%100 == 0):
                 #index range
@@ -110,6 +111,7 @@ class DATA_ANALYSIS():
                     plt.hist(diffs[b:i], bins=25, density=True, alpha=0.6, color='g')
                 #fit PDF curve
                 xmin, xmax = mu-4*std,mu+4*std
+                #xmin, xmax = 0,mu+4*std
                 x = np.linspace(xmin, xmax, 100)
                 normal_dist = norm.pdf(x, mu, std)
                 self.diff_threshold = x[95]
@@ -124,7 +126,7 @@ class DATA_ANALYSIS():
                 
 
         end = size_of_arr-1
-        self.save_filter_data("filtered/{ID}/FROM_{START}_TO_{END}.csv".format(ID = self.vehicule_id,START=start,END=end),start,end)
+        #self.save_filter_data("filtered/{ID}/FROM_{START}_TO_{END}.csv".format(ID = self.vehicule_id,START=start,END=end),start,end)
         if(PLT_ENABLE == True):
             xi = list(range(len(self.filter_by_name)-1))
             plt.plot(xi,diffs, 'b') # Draw blue line
@@ -172,7 +174,7 @@ class DATA_ANALYSIS():
 set = DATA_ANALYSIS()
 
 #default
-set.filter_ID(VEHICULE_ID,0,100)
+set.filter_ID(VEHICULE_ID,120,1000)
 
 #filter all data set
 if("generate" in sys.argv):

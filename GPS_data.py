@@ -2,6 +2,12 @@
 #python version 3.6
 #email: emiliotonix@gmail.com
 
+
+#if mplleaflet.show fails check workaround in https://github.com/plotly/plotly.py/issues/2913
+#write in python3.9/site-packages/mplleaflet/mplexporter/utils.py line 241 
+#if axis._major_tick_kw['gridOn'] and len(gridlines) > 0:
+
+
 import sys
 import numpy as np
 import pandas as pd
@@ -12,33 +18,44 @@ import path_check
 import seaborn as sns
 import math
 from scipy.stats import norm
+import PCA
 
 ORIGINAL_DATA = 'Data/Vehicle_GPS_Data__Department_of_Public_Services.csv'
-SELECT_FILTER = 'filtered/40/FROM_0_TO_128.csv'
-VEHICULE_ID = 153
+SELECT_FILTER = '/home/tonix/Documents/MachineLearningProject/GPS_Machine_Learning/filtered/153/FROM_0_TO_126.csv'
+VEHICULE_ID   = 153
+
 START_DATA  = 0
 END_DATA    = -1
 THRESHOLD_DIFF = .020
-PLT_ENABLE = True
+PLT_ENABLE = False
+GENERATE   = False
 
 class DATA_ANALYSIS():
     def __init__(self):
         #read data csv
-        self.df = pd.read_csv(ORIGINAL_DATA)
+        if(GENERATE == True):
+            self.df = pd.read_csv(ORIGINAL_DATA)
+        else:
+            self.df = pd.read_csv(SELECT_FILTER)
+
         self.filter_by_name = None
         self.diff_threshold = THRESHOLD_DIFF
         self.vehicule_id    = VEHICULE_ID
         self.all_ids        = self.df['ASSET'].unique()
+        #data interpretation
+        self.PCA            = None
 
     def filter_ID(self,ID,BEGIN,END):
         self.vehicule_id = ID
         self.f1 = self.df['ASSET'] == ID #select a vehicule
         self.df = self.df.sort_values(by=['TIME']) # sort data by time
-        print("self.df size: " + str(self.df[self.f1].shape[0]))
+        #print("self.df size: " + str(self.df[self.f1].shape[0]))
         #filter by VEHICULE_ID
-        #self.filter_by_name = self.df[self.f1][BEGIN:self.df[self.f1].shape[0]]
-        self.filter_by_name = self.df[self.f1][BEGIN:END]
-        #print(self.filter_by_name)
+        if(GENERATE == True):
+            self.filter_by_name = self.df[self.f1][BEGIN:self.df[self.f1].shape[0]]
+        else:
+            END = min(self.df[self.f1].shape[0],END)
+            self.filter_by_name = self.df[self.f1][BEGIN:END]
 
     def save_filter_data(self,name,begin,end):
         #save filter data in csv
@@ -64,8 +81,7 @@ class DATA_ANALYSIS():
             x = self.filter_by_name['LONGITUDE'].iloc[i]
             y = self.filter_by_name['LATITUDE'].iloc[i]
             plt.plot(x,y, 'rs') # Draw red 
-            plt.text(x * (1 + 0.00001), y * (1 + 0.00001) , i, fontsize=12)
-            
+            #plt.text(x * (1 + 0.00001), y * (1 + 0.00001) , i, fontsize=12)
         mplleaflet.show()
         
 
@@ -95,9 +111,10 @@ class DATA_ANALYSIS():
             if(diffs[i] > self.diff_threshold):
                 #self.filter_by_name.drop(self.filter_by_name.index[i])
                 print("new data")
-                #end   = i
-                #self.save_filter_data("filtered/{ID}/FROM_{START}_TO_{END}.csv".format(ID = self.vehicule_id,START=start,END=end),start,end)
-                #start = end
+                end   = i
+                if(GENERATE == True):
+                    self.save_filter_data("filtered/{ID}/FROM_{START}_TO_{END}.csv".format(ID = self.vehicule_id,START=start,END=end),start,end)
+                start = end
             
             if(i%100 == 0):
                 #index range
@@ -126,7 +143,8 @@ class DATA_ANALYSIS():
                 
 
         end = size_of_arr-1
-        #self.save_filter_data("filtered/{ID}/FROM_{START}_TO_{END}.csv".format(ID = self.vehicule_id,START=start,END=end),start,end)
+        if(GENERATE == True):
+            self.save_filter_data("filtered/{ID}/FROM_{START}_TO_{END}.csv".format(ID = self.vehicule_id,START=start,END=end),start,end)
         if(PLT_ENABLE == True):
             xi = list(range(len(self.filter_by_name)-1))
             plt.plot(xi,diffs, 'b') # Draw blue line
@@ -153,37 +171,57 @@ class DATA_ANALYSIS():
         title = "Fit results: avg = %.5f,  std = %.5f" % (mu, std)
         plt.title(title)
         plt.show()
+    
+    # explicit function to normalize array
+    def normalize_2d(self,matrix):
+        norm = np.linalg.norm(matrix)
+        matrix = matrix/norm  # normalized matrix
+        return matrix
 
-    def heightMap(self):
-        #lon = self.filter_by_name.LONGITUDE.to_numpy()
-        #lat = self.filter_by_name.LATITUDE.to_numpy()
-        #x, y = np.meshgrid(range(lon), range(lat))
-        lat = self.filter_by_name.LATITUDE.to_numpy()
-        mu, std = norm.fit(lat[0:100])
-        xmin, xmax = plt.xlim()
-        x_axis = np.linspace(xmin, xmax, 100)
-        p_lat = norm.pdf(x_axis, mu, std)
+    def PCA_analysis(self):
+        
+        raw = self.filter_by_name["LATITUDE"].to_numpy()
+        N = self.normalize_2d(raw)
+        X = N
 
-        long = self.filter_by_name.LONGITUDE.to_numpy()
-        mu, std = norm.fit(lat[0:100])
-        xmin, xmax = plt.xlim()
-        x_axis = np.linspace(xmin, xmax, 100)
-        p_long = norm.pdf(x_axis, mu, std)
+        raw = self.filter_by_name["LONGITUDE"].to_numpy()
+        N = self.normalize_2d(raw)
+        X = np.column_stack((X,N))
 
+
+        raw = self.filter_by_name["REASONS"].to_numpy()
+        N    = self.normalize_2d(raw)
+        X    = np.column_stack((X,N))
+
+        raw  = self.filter_by_name["SPEED"].to_numpy()
+        R    = self.normalize_2d(raw)
+
+        #WIND
+        wind      = self.filter_by_name.HEADING.to_numpy()
+        transform = np.vectorize(compas.winds_to_degree)
+        wind      = transform(wind)
+
+        x_polar = R*np.cos(wind)
+        y_polar = R*np.sin(wind)
+
+        X  = np.column_stack((X,x_polar))
+        X  = np.column_stack((X,y_polar))
+
+        self.PCA  = PCA.PCA(X,2,plot=True)
 
 set = DATA_ANALYSIS()
 
 #default
-set.filter_ID(VEHICULE_ID,120,1000)
+set.filter_ID(VEHICULE_ID,0,1000)
 
 #filter all data set
-if("generate" in sys.argv):
-    for n in set.all_ids:
-        set.filter_ID(n,0,100) # end data is not used
-        set.densisty_coord()   # save data with low variance 
+if(GENERATE == True):
+    if("generate" in sys.argv):
+        for n in set.all_ids:
+            set.filter_ID(n,0,100) # end data is not used
+            set.densisty_coord()   # save data with low variance 
 
-if("height" in sys.argv):
-    set.heightMap()
+set.PCA_analysis()
 
 if("map" in sys.argv):
     set.plot_map()

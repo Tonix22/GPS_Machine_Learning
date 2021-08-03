@@ -19,10 +19,15 @@ import seaborn as sns
 import math
 from scipy.stats import norm
 import PCA
+#from sklearn.decomposition import PCA
+from sklearn import preprocessing
 
-ORIGINAL_DATA = 'Data/Vehicle_GPS_Data__Department_of_Public_Services.csv'
-SELECT_FILTER = '/home/tonix/Documents/MachineLearningProject/GPS_Machine_Learning/filtered/153/FROM_0_TO_126.csv'
-VEHICULE_ID   = 153
+ORIGINAL_DATA  = 'Data/Vehicle_GPS_Data__Department_of_Public_Services.csv'
+BASE_PATH      = '/home/tonix/Documents/MachineLearningProject/GPS_Machine_Learning/filtered/'
+MY_DRIVER      = BASE_PATH+'153/FROM_0_TO_126.csv'
+DRIVER1        = BASE_PATH+'115/FROM_0_TO_114.csv'
+DRIVER2        = BASE_PATH+'484/FROM_0_TO_121.csv'
+VEHICULE_ID    = 153
 
 START_DATA  = 0
 END_DATA    = -1
@@ -36,7 +41,10 @@ class DATA_ANALYSIS():
         if(GENERATE == True):
             self.df = pd.read_csv(ORIGINAL_DATA)
         else:
-            self.df = pd.read_csv(SELECT_FILTER)
+            my_driver  = pd.read_csv(MY_DRIVER)
+            drv1       = pd.read_csv(DRIVER1)
+            #drv2       = pd.read_csv(DRIVER2)
+            self.df    = pd.concat([my_driver,drv1], axis=0)
 
         self.filter_by_name = None
         self.diff_threshold = THRESHOLD_DIFF
@@ -45,11 +53,15 @@ class DATA_ANALYSIS():
         #data interpretation
         self.PCA            = None
 
+    def sort_data(self):
+        self.df = self.df.sort_values(by=['TIME']) # sort data by time
+        self.filter_by_name = self.df
+
     def filter_ID(self,ID,BEGIN,END):
         self.vehicule_id = ID
         self.f1 = self.df['ASSET'] == ID #select a vehicule
         self.df = self.df.sort_values(by=['TIME']) # sort data by time
-        #print("self.df size: " + str(self.df[self.f1].shape[0]))
+        
         #filter by VEHICULE_ID
         if(GENERATE == True):
             self.filter_by_name = self.df[self.f1][BEGIN:self.df[self.f1].shape[0]]
@@ -174,25 +186,36 @@ class DATA_ANALYSIS():
     
     # explicit function to normalize array
     def normalize_2d(self,matrix):
-        norm = np.linalg.norm(matrix)
-        matrix = matrix/norm  # normalized matrix
-        return matrix
+        norm = (matrix-np.max(matrix))/(np.max(matrix)-np.min(matrix))
+        norm = np.absolute(norm)
+        return norm
 
     def PCA_analysis(self):
+        size_of_arr = len(self.filter_by_name.LONGITUDE)-1
+        diffs = np.zeros(size_of_arr+1)
+        for i in range(1,size_of_arr):
+            x = abs(self.filter_by_name['LONGITUDE'].iloc[i] - self.filter_by_name['LONGITUDE'].iloc[i-1])
+            y = abs(self.filter_by_name['LATITUDE'].iloc[i]  - self.filter_by_name['LATITUDE'].iloc[i-1])
+            diffs[i] = math.sqrt(x**2+y**2) #norm of differences
         
-        raw = self.filter_by_name["LATITUDE"].to_numpy()
+        
+        lat = self.filter_by_name["LATITUDE"].to_numpy()
+        raw = lat - np.mean(lat, axis = 0)
+
         N = self.normalize_2d(raw)
         X = N
 
-        raw = self.filter_by_name["LONGITUDE"].to_numpy()
+        lon = self.filter_by_name["LONGITUDE"].to_numpy()
+        raw = lat - np.mean(lon, axis = 0)
         N = self.normalize_2d(raw)
         X = np.column_stack((X,N))
-
-
+        N = self.normalize_2d(diffs)
+        X = np.column_stack((X,N))
+        
         raw = self.filter_by_name["REASONS"].to_numpy()
         N    = self.normalize_2d(raw)
         X    = np.column_stack((X,N))
-
+        #X = N
         raw  = self.filter_by_name["SPEED"].to_numpy()
         R    = self.normalize_2d(raw)
 
@@ -203,16 +226,23 @@ class DATA_ANALYSIS():
 
         x_polar = R*np.cos(wind)
         y_polar = R*np.sin(wind)
-
+        
         X  = np.column_stack((X,x_polar))
         X  = np.column_stack((X,y_polar))
+        
+        X = preprocessing.scale(X)
 
-        self.PCA  = PCA.PCA(X,2,plot=True)
+        self.PCA = PCA.PCA(X,2,plot =True)
+        target = self.filter_by_name.iloc[:,1]
+        sns.scatterplot(x=self.PCA.mat_reduced[:,0], y=self.PCA.mat_reduced[:,1],s=60,hue = target,palette= 'Spectral')
+        plt.show()
+
 
 set = DATA_ANALYSIS()
 
 #default
-set.filter_ID(VEHICULE_ID,0,1000)
+#set.filter_ID(VEHICULE_ID,0,1000)
+set.sort_data()
 
 #filter all data set
 if(GENERATE == True):

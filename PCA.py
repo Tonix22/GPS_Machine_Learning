@@ -3,6 +3,8 @@ import seaborn as sns
 import matplotlib.pyplot as plt
 import pandas as pd
 
+PLT_COVARIANCE = True
+
 class PCA():
     def __init__(self,X,components,plot=False):
         self.input_data  = X
@@ -10,11 +12,13 @@ class PCA():
         self.components  = components
         self.mat_reduced = self.do_PCA(components)
         #Creating a Pandas DataFrame of reduced Dataset
+        """
         self.principal_df = pd.DataFrame(self.mat_reduced , columns = ['PC1','PC2'])
         if(plot == True):
             plt.figure(figsize = (6,6))
             sns.scatterplot(data = self.principal_df , x = 'PC1',y = 'PC2',palette= 'icefire')
             plt.show()
+        """
 
     def percentage(self,x,total):
         return x / total
@@ -27,6 +31,20 @@ class PCA():
         # calculating the covariance matrix of the mean-centered data.
         #rowvar is set to False to get the covariance matrix in the required dimensions.
         cov_mat = np.cov(X_meaned , rowvar = False)
+        
+        cols = ['Lat', 'Lon', 'Dif', 'Reas', 'X_plr','Y_plr']
+
+        if(PLT_COVARIANCE == True):
+
+            plt.figure(figsize=(10,10))
+            sns.set(font_scale=1.5)
+            hm = sns.heatmap(cov_mat, cbar=True, annot=True, square=True,
+            fmt='.2f',annot_kws={'size': 12},
+            yticklabels=cols,
+            xticklabels=cols)
+            plt.title('Covariance matrix showing correlation coefficients')
+            plt.tight_layout()
+            plt.show()
 
         #The Eigenvectors of the Covariance matrix we get are Orthogonal 
         #to each other and each vector represents a principal axis.
@@ -40,13 +58,22 @@ class PCA():
         sorted_eigenvalue = eigen_values[sorted_index]
         #similarly sort the eigenvectors 
         sorted_eigenvectors = eigen_vectors[:,sorted_index]
+
+        sorted_cols = [None] * len(cols)
+        i=0
+        for n in sorted_index:
+            print(n)
+            sorted_cols[i] = cols[n]
+            i+=1 
         
         if(self.plot == True):
+            
             sum = np.sum(sorted_eigenvalue)
             participation = np.vectorize(self.percentage)
             relevance = participation(sorted_eigenvalue,sum)
             x = np.linspace(0, len(relevance), len(relevance))
             plt.scatter(x,relevance)
+            plt.xticks(range(len(sorted_cols)), sorted_cols, size='small')
             plt.title("PCA relevance")
             plt.show()
         

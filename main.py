@@ -1,18 +1,22 @@
 import sys
+from os.path import exists
 from GPS_data import *
 
 def main():
-    #if("GPS_noise_removal" in sys.argv):
-    if not os.path.isdir(FILTERED_FILE):
+    if not os.path.exists(FILTERED_FILE):
         set = GPS_Noise_removal()
         for n in set.all_ids:
             set.filter_ID(n) # end data is not used
             set.densisty_coord()   # save data with low variance 
     
-    """
-    set.sort_data()
 
-
+    set = Data_set_reader()
+    set.filter_one_sample(153,0)
+    set.filter_one_sample(153,1)
+    set.append_frame(115,0)
+    set.append_frame(115,1)
+    set.append_frame(78,0)
+    set.append_frame(78,1)
     set.PCA_analysis()
 
     if("map" in sys.argv):
@@ -22,14 +26,10 @@ def main():
         set.plot_speed_wind()
 
     if("diffs" in sys.argv):
-        set.densisty_coord()
+        set.plot_diffs()
 
     if("reasons" in sys.argv):
-        set.Driving_Reason(0,set.df[set.f1].shape[0])
-
-    if("save" in sys.argv):
-        set.save_filter_data("filtered/Vehicule_ID_{ID}_FROM_{START}_TO_{END}.csv".format(ID = VEHICULE_ID,START=START_DATA,END=END_DATA),START_DATA,100)
-    """
+        set.plot_Reason(end = set.filter_by_name.shape[0])
 
 if __name__=="__main__":
     main()

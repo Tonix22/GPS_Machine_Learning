@@ -4,11 +4,20 @@
 
 import numpy as np
 import pandas as pd
+import Visualize_data
+import outlier_by_gausian
 import PCA
 from params import *
-from outlier_by_gausian import *
 
 class Data_Set():
+    #plotters
+    plot_speed_wind = Visualize_data.plot_speed_wind
+    plot_map        = Visualize_data.plot_map
+    plot_speed      = Visualize_data.plot_speed
+    plot_diffs      = Visualize_data.plot_diffs
+    plot_Reason     = Visualize_data.plot_Reason
+
+
     def __init__(self):
         self.df             = None
         self.filter_by_name = None
@@ -24,7 +33,7 @@ class Data_Set():
         
 
 class GPS_Noise_removal(Data_Set):
-    densisty_coord = densisty_coord
+    densisty_coord = outlier_by_gausian.densisty_coord
     def __init__(self):
         self.df      = pd.read_csv(ORIGINAL_DATA)
         self.all_ids = self.df['ASSET'].unique()
@@ -42,16 +51,18 @@ class GPS_Noise_removal(Data_Set):
         else:   
             self.filter_by_name.iloc[begin:end,:12].to_csv(name,mode='a', header=False)
 
-
 class Data_set_reader(Data_Set):
+    PCA_analysis = PCA.PCA_analysis
     def __init__(self):
         self.PCA   = None
-        self.df    = pd.read_csv(MY_DRIVER)
-        self.sort_data()
-        #drv1       = pd.read_csv(DRIVER1)
-        #drv2       = pd.read_csv(DRIVER2)
-        #self.df    = pd.concat([my_driver,drv1,drv2], axis=0)
+        self.df    = pd.read_csv(FILTER_DATA)
     
-    def sort_data(self):
-        self.df = self.df.sort_values(by=['TIME']) # sort data by time
-        self.filter_by_name = self.df
+    def filter_one_sample(self,ID,batch_ID):
+        self.vehicule_id = ID
+        self.filter_by_name = self.df[self.df['ASSET'] == ID]
+        self.filter_by_name = self.filter_by_name[self.filter_by_name['Batch_ID'] == batch_ID]
+
+    def append_frame(self,ID,batch_ID):
+        other_vehicule = self.df[self.df['ASSET'] == ID]
+        other_vehicule =  other_vehicule[other_vehicule['Batch_ID'] == batch_ID]
+        self.filter_by_name = self.filter_by_name.append(other_vehicule, ignore_index=True)

@@ -2,12 +2,8 @@ import numpy as np
 import seaborn as sns
 import matplotlib.pyplot as plt
 import pandas as pd
-import math
-from scipy.stats import norm
-import compas
-
-PLT_COVARIANCE = False
-
+import Features_generator
+from  params import PLT_COVARIANCE
 class PCA():
     def __init__(self,X,components,plot=False):
         self.input_data  = X
@@ -65,7 +61,6 @@ class PCA():
         sorted_cols = [None] * len(cols)
         i=0
         for n in sorted_index:
-            print(n)
             sorted_cols[i] = cols[n]
             i+=1 
         
@@ -93,58 +88,37 @@ class PCA():
 
         return X_reduced
 
-# explicit function to normalize array
-    def normalize_2d(self,matrix):
-        norm = (matrix-np.max(matrix))/(np.max(matrix)-np.min(matrix))
-        norm = np.absolute(norm)
-        return norm
 
 def PCA_analysis(self):
-    size_of_arr = len(self.filter_by_name.LONGITUDE)-1
-    diffs = np.zeros(size_of_arr+1)
-    for i in range(1,size_of_arr):
-        x = abs(self.filter_by_name['LONGITUDE'].iloc[i] - self.filter_by_name['LONGITUDE'].iloc[i-1])
-        y = abs(self.filter_by_name['LATITUDE'].iloc[i]  - self.filter_by_name['LATITUDE'].iloc[i-1])
-        diffs[i] = math.sqrt(x**2+y**2) #norm of differences
-    
-    
-    lat = self.filter_by_name["LATITUDE"].to_numpy()
-    raw = lat - np.mean(lat, axis = 0)
+    ftg = Features_generator.Feature_Generator()
+    ftg.Generate_diffs(self.filter_by_name)
+    ftg.Generate_wind(self.filter_by_name)
 
-    N = self.normalize_2d(raw)
+    lat = self.filter_by_name["LATITUDE"].to_numpy()[1:]
+    lat = lat*1000
+    raw = lat - lat[0]
+    N = ftg.normalize_1d(raw,t_min=-1,t_max=1)
     X = N
 
-    lon = self.filter_by_name["LONGITUDE"].to_numpy()
-    raw = lat - np.mean(lon, axis = 0)
-    N = self.normalize_2d(raw)
-    X = np.column_stack((X,N))
-    N = self.normalize_2d(diffs)
-    X = np.column_stack((X,N))
-    
-    raw = self.filter_by_name["REASONS"].to_numpy()
-    N    = self.normalize_2d(raw)
-    X    = np.column_stack((X,N))
-    #X = N
-    raw  = self.filter_by_name["SPEED"].to_numpy()
-    R    = self.normalize_2d(raw)
+    lon = self.filter_by_name["LONGITUDE"].to_numpy()[1:]
+    lon = lon*1000
+    raw = lon - lon[0]
+    N   = ftg.normalize_1d(raw,t_min=-1,t_max=1)
+    X   = np.column_stack((X,N))
 
-    #WIND
-    wind      = self.filter_by_name.HEADING.to_numpy()
-    transform = np.vectorize(compas.winds_to_degree)
-    wind      = transform(wind)
+    X   = np.column_stack((X,ftg.diffs))
 
-    x_polar = R*np.cos(wind)
-    y_polar = R*np.sin(wind)
+    raw = self.filter_by_name["REASONS"].to_numpy()[1:]
+    N   = ftg.normalize_1d(raw,t_min=-1,t_max=1)
+    X   = np.column_stack((X,N))
     
-    X  = np.column_stack((X,x_polar))
-    X  = np.column_stack((X,y_polar))
+    X   = np.column_stack((X,ftg.X_polar[1:]))
+    X   = np.column_stack((X,ftg.Y_polar[1:]))
     
-    X = preprocessing.scale(X)
+    self.PCA = PCA(X,2, plot=False)
 
-    self.PCA = PCA.PCA(X,2)
     target = self.filter_by_name.iloc[:,1]
-    
-    sns.scatterplot(x=self.PCA.mat_reduced[:,0], y=self.PCA.mat_reduced[:,1],s=60,hue = target,palette= 'dark:salmon_r')
+    sns.scatterplot(x=self.PCA.mat_reduced[:,0], y=self.PCA.mat_reduced[:,1],s=60,hue = target[1:],palette= 'dark:salmon_r')
     plt.show()
 
 

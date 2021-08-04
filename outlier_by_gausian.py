@@ -1,6 +1,5 @@
 import matplotlib.pyplot as plt
 import numpy as np
-import path_check
 from params import PLT_ENABLE, FILTERED_FILE
 from scipy.stats import norm
 import math
@@ -17,8 +16,6 @@ def densisty_coord(self):
     batch_size  = 100
     treshhold_idx = (batch_size*95)//100
     batch_id    = 0
-
-    #path_check.create_path(str(self.vehicule_id))
 
     for i in range(1,Fg.diffs_size):
         

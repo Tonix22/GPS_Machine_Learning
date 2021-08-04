@@ -2,8 +2,11 @@ import numpy as np
 import seaborn as sns
 import matplotlib.pyplot as plt
 import pandas as pd
+import math
+from scipy.stats import norm
+import compas
 
-PLT_COVARIANCE = True
+PLT_COVARIANCE = False
 
 class PCA():
     def __init__(self,X,components,plot=False):
@@ -90,7 +93,59 @@ class PCA():
 
         return X_reduced
 
-#X = np.random.randint(10,50,100).reshape(20,5)
-#mat_reduced = PCA(X,2)
+# explicit function to normalize array
+    def normalize_2d(self,matrix):
+        norm = (matrix-np.max(matrix))/(np.max(matrix)-np.min(matrix))
+        norm = np.absolute(norm)
+        return norm
+
+def PCA_analysis(self):
+    size_of_arr = len(self.filter_by_name.LONGITUDE)-1
+    diffs = np.zeros(size_of_arr+1)
+    for i in range(1,size_of_arr):
+        x = abs(self.filter_by_name['LONGITUDE'].iloc[i] - self.filter_by_name['LONGITUDE'].iloc[i-1])
+        y = abs(self.filter_by_name['LATITUDE'].iloc[i]  - self.filter_by_name['LATITUDE'].iloc[i-1])
+        diffs[i] = math.sqrt(x**2+y**2) #norm of differences
+    
+    
+    lat = self.filter_by_name["LATITUDE"].to_numpy()
+    raw = lat - np.mean(lat, axis = 0)
+
+    N = self.normalize_2d(raw)
+    X = N
+
+    lon = self.filter_by_name["LONGITUDE"].to_numpy()
+    raw = lat - np.mean(lon, axis = 0)
+    N = self.normalize_2d(raw)
+    X = np.column_stack((X,N))
+    N = self.normalize_2d(diffs)
+    X = np.column_stack((X,N))
+    
+    raw = self.filter_by_name["REASONS"].to_numpy()
+    N    = self.normalize_2d(raw)
+    X    = np.column_stack((X,N))
+    #X = N
+    raw  = self.filter_by_name["SPEED"].to_numpy()
+    R    = self.normalize_2d(raw)
+
+    #WIND
+    wind      = self.filter_by_name.HEADING.to_numpy()
+    transform = np.vectorize(compas.winds_to_degree)
+    wind      = transform(wind)
+
+    x_polar = R*np.cos(wind)
+    y_polar = R*np.sin(wind)
+    
+    X  = np.column_stack((X,x_polar))
+    X  = np.column_stack((X,y_polar))
+    
+    X = preprocessing.scale(X)
+
+    self.PCA = PCA.PCA(X,2)
+    target = self.filter_by_name.iloc[:,1]
+    
+    sns.scatterplot(x=self.PCA.mat_reduced[:,0], y=self.PCA.mat_reduced[:,1],s=60,hue = target,palette= 'dark:salmon_r')
+    plt.show()
+
 
 

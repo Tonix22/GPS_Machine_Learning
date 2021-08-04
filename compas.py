@@ -1,7 +1,5 @@
 import math
 
-#winds = ["E", "SEE", "SE", "SSE", "S", "SSW", "SW", "SWW", "W", "NWW", "NW", "NNW","N", "NNE", "NE", "NEE"]
-
 winds = ["E", 
          "NEE", "NE", "NNE",
          "N", 

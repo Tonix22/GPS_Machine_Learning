@@ -18,10 +18,13 @@ import PCA
 sys.path.insert(0, dirname+"ML_methods/DB_SCAN")
 import Db_SCAN
 
+sys.path.insert(0, dirname+"ML_methods/Trees")
+import RandomForest
+
 sys.path.insert(0, dirname+"Data_representation")
 import Visualize_data
 import outlier_by_gausian
-
+import Features_generator
 
 class Data_Set():
     #plotters
@@ -70,11 +73,26 @@ class Data_set_reader(Data_Set):
     def __init__(self):
         self.PCA    = None
         self.DBSCAN = None
+        self.Forest = None
         self.df     = pd.read_csv(FILTER_DATA)
     
     def DBSCAN_analysis(self,X,Y):
         self.DBSCAN = Db_SCAN.DB_SCAN(X,Y)
         self.DBSCAN.plot_DBSCAN()
+    
+    def Random_Forest_analsysis(self,X,Y,forest_size,n_features):
+        self.Forest = RandomForest(X, Y, forest_size, n_features, len(Y))
+
+    def Feature_Generator(self,feature,df):
+        feature = None
+        gen     = Features_generator()
+        if(feature == "diffs"):
+            gen.
+        elif(feature == "wind"):
+
+        elif(feature == "Frequency"):
+
+        
 
     def filter_one_sample(self,ID,batch_ID):
         self.vehicule_id = ID

@@ -1,0 +1,13 @@
+// For format details, see https://aka.ms/devcontainer.json. For config options, see the README at:
+// https://github.com/microsoft/vscode-dev-containers/tree/v0.191.0/containers/ubuntu
+{
+	//"image": "mcr.microsoft.com/vscode/devcontainers/typescript-node:0-12",
+	"workspaceFolder": "/root/external",
+	"extensions": [
+		"ms-vscode.cpptools",
+		"platformio.platformio-ide",
+		"ms-python.vscode-pylance"
+	],
+	"mounts": ["source=${localWorkspaceFolder},target=/root/external,type=bind"],
+	"runArgs": ["--device=/dev/bus/usb"]
+}

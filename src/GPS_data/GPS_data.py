@@ -87,11 +87,18 @@ class Data_set_reader(Data_Set):
         feature = None
         gen     = Features_generator()
         if(feature == "diffs"):
-            gen.
+            gen.Generate_diffs()
+            feature = gen.diffs
+
         elif(feature == "wind"):
+            gen.Generate_Generate_wind()
+            feature = gen.X_polar
+            feature = np.column_stack((feature,gen.Y_polar))
 
         elif(feature == "Frequency"):
-
+            gen.Generate_weight_freq_domain()
+            feature = gen.wfd
+        return feature
         
 
     def filter_one_sample(self,ID,batch_ID):

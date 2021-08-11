@@ -17,9 +17,13 @@ def main():
     set = GPS_data.Data_set_reader()
     set.filter_one_sample(153,0)
     #set.filter_one_sample(153,1)
+
     set.append_frame(115,0)
-    #set.append_frame(115,1)
     set.append_frame(78,0)
+    set.append_frame(40,0)
+    
+
+    """
     #set.append_frame(78,1)
     set.PCA_analysis()
     set.DBSCAN_analysis(set.PCA.mat_reduced[:,0],set.PCA.mat_reduced[:,1])
@@ -30,6 +34,7 @@ def main():
     #lat = set.filter_by_name["LATITUDE"].to_numpy()[1:]
     #lon = set.filter_by_name["LONGITUDE"].to_numpy()[1:]
     #set.DBSCAN_analysis(lon,lat)
+    """
 
     if("map" in sys.argv):
         set.plot_map()

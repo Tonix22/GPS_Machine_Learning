@@ -1,8 +1,7 @@
 import numpy as np
 import seaborn as sns
 import matplotlib.pyplot as plt
-import sys
-import pathlib
+import sys, pathlib
 
 dirname  = str(pathlib.Path(__file__).parent.absolute())+"/../../"
 sys.path.insert(0, dirname)
@@ -31,7 +30,6 @@ class PCA():
         return x / total
 
     def do_PCA(self,num_components):
-        #X = np.random.randint(10,50,100).reshape(20,5)
         #Subtract the mean of each variable
         X_meaned = self.input_data - np.mean(self.input_data , axis = 0)
 

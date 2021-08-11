@@ -61,3 +61,27 @@ def plot_Reason(self,begin=0,end=2000):
     title = "Fit results: avg = %.5f,  std = %.5f" % (mu, std)
     plt.title(title)
     plt.show()
+
+def plot_DBSCAN(self):
+    # Black removed and is used for noise instead.
+    unique_labels = set(self.labels)
+    colors = [plt.cm.Spectral(each)
+            for each in np.linspace(0, 1, len(unique_labels))]
+    for k, col in zip(unique_labels, colors):
+        if k == -1:
+            # Black used for noise.
+            col = [0, 0, 0, 1]
+
+        class_member_mask = (self.labels == k)
+
+        xy = self.X[class_member_mask & self.core_samples_mask]
+        plt.plot(xy[:, 0], xy[:, 1], 'o', markerfacecolor=tuple(col),
+                markeredgecolor='k', markersize=14)
+
+        xy = self.X[class_member_mask & ~self.core_samples_mask]
+        plt.plot(xy[:, 0], xy[:, 1], 'o', markerfacecolor=tuple(col),
+                markeredgecolor='k', markersize=6)
+
+    plt.title('Estimated number of clusters: %d' % self.n_clusters_)
+    #mplleaflet.show()
+    plt.show()

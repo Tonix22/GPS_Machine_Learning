@@ -15,6 +15,9 @@ from params import *
 sys.path.insert(0, dirname+"ML_methods/PCA")
 import PCA
 
+sys.path.insert(0, dirname+"ML_methods/DB_SCAN")
+import Db_SCAN
+
 sys.path.insert(0, dirname+"Data_representation")
 import Visualize_data
 import outlier_by_gausian
@@ -65,9 +68,14 @@ class GPS_Noise_removal(Data_Set):
 class Data_set_reader(Data_Set):
     PCA_analysis = PCA.PCA_analysis
     def __init__(self):
-        self.PCA   = None
-        self.df    = pd.read_csv(FILTER_DATA)
+        self.PCA    = None
+        self.DBSCAN = None
+        self.df     = pd.read_csv(FILTER_DATA)
     
+    def DBSCAN_analysis(self,X,Y):
+        self.DBSCAN = Db_SCAN.DB_SCAN(X,Y)
+        self.DBSCAN.plot_DBSCAN()
+
     def filter_one_sample(self,ID,batch_ID):
         self.vehicule_id = ID
         self.filter_by_name = self.df[self.df['ASSET'] == ID]

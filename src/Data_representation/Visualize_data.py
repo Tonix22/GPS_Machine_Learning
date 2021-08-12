@@ -26,6 +26,10 @@ def plot_map(self):
 
     mplleaflet.show()
 
+def plot_generic(self,arr):
+    xi = list(range(len(arr)))
+    plt.plot(xi,arr,'b') # Draw blue line
+    plt.show()
 
 def plot_speed(self):
     xi = list(range(len(self.filter_by_name)))
@@ -85,3 +89,4 @@ def plot_DBSCAN(self):
     plt.title('Estimated number of clusters: %d' % self.n_clusters_)
     #mplleaflet.show()
     plt.show()
+

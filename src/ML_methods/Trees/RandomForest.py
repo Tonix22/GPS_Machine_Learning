@@ -1,5 +1,5 @@
 import SingleTree
-
+import numpy as np
 #n_trees    : Number of uncorrelated trees we ensemble to create the random forest.
 
 #n_features : The number of features to sample and pass onto each tree
@@ -34,10 +34,11 @@ class RandomForest():
         #Randomly permute a sequence, or return a permuted range.
         idxs = np.random.permutation(len(self.y))[:self.sample_sz] # X
 
-        f_idxs = np.random.permutation(self.x.shape[1])[:self.n_features] # Y 
+        f_idxs = np.random.permutation(self.x.shape[1])[:self.n_features] # random column 
 
-        return SingleTree.DecisionTree(self.x.iloc[idxs], self.y[idxs], self.n_features, f_idxs,
+        return SingleTree.DecisionTree(self.x[idxs], self.y[idxs], self.n_features, f_idxs,
                     idxs=np.array(range(self.sample_sz)),depth = self.depth, min_leaf=self.min_leaf)
         
     def predict(self, x):
-        return np.mean([t.predict(x) for t in self.trees], axis=0)
+        trees = [t.predict(x) for t in self.trees]
+        return np.mean(trees, axis=0)

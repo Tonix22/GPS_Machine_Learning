@@ -1,3 +1,5 @@
+import numpy as np
+import math
 class DecisionTree():
     def __init__(self, x, y, n_features, f_idxs,idxs,depth=10, min_leaf=5):
         self.x, self.y, self.idxs, self.min_leaf, self.f_idxs = x, y, idxs, min_leaf, f_idxs
@@ -20,10 +22,10 @@ class DecisionTree():
         self.lhs = DecisionTree(self.x, self.y, self.n_features, lf_idxs, self.idxs[lhs], depth=self.depth-1, min_leaf=self.min_leaf)
         self.rhs = DecisionTree(self.x, self.y, self.n_features, rf_idxs, self.idxs[rhs], depth=self.depth-1, min_leaf=self.min_leaf)
 
-    def std_agg(cnt, s1, s2): return math.sqrt((s2/cnt) - (s1/cnt)**2)  
+    def std_agg(self,cnt, s1, s2): return math.sqrt((s2/cnt) - (s1/cnt)**2)  
 
     def find_better_split(self, var_idx):
-        x, y = self.x.values[self.idxs,var_idx], self.y[self.idxs]
+        x, y = self.x[self.idxs,var_idx], self.y[self.idxs]
 
         sort_idx = np.argsort(x) #index sort
         #sort x and y
@@ -51,8 +53,8 @@ class DecisionTree():
             #weighted average of standard deviation of the 
             #two halves with number of rows in each half as their weights.
             #std_agg(cnt, s1, s2) -> sqrt((s2/cnt) - (s1/cnt)**2)
-            lhs_std = std_agg(lhs_cnt, lhs_sum, lhs_sum2)
-            rhs_std = std_agg(rhs_cnt, rhs_sum, rhs_sum2)
+            lhs_std = self.std_agg(lhs_cnt, lhs_sum, lhs_sum2)
+            rhs_std = self.std_agg(rhs_cnt, rhs_sum, rhs_sum2)
             #sum of std_i*n_size_split
             curr_score = lhs_std*lhs_cnt + rhs_std*rhs_cnt
 
@@ -65,14 +67,15 @@ class DecisionTree():
     def split_name(self): return self.x.columns[self.var_idx]
     
     @property
-    def split_col(self): return self.x.values[self.idxs,self.var_idx]
+    def split_col(self): return self.x[self.idxs,self.var_idx]
 
     @property
     def is_leaf(self): return self.score == float('inf') or self.depth <= 0 
     
 
     def predict(self, x):
-        return np.array([self.predict_row(xi) for xi in x])
+        predict = np.array([self.predict_row(xi) for xi in x])
+        return predict
 
     def predict_row(self, xi):
         if self.is_leaf: return self.val

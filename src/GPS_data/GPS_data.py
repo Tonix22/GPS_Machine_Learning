@@ -33,7 +33,7 @@ class Data_Set():
     plot_speed      = Visualize_data.plot_speed
     plot_diffs      = Visualize_data.plot_diffs
     plot_Reason     = Visualize_data.plot_Reason
-
+    plot_generic    = Visualize_data.plot_generic
 
     def __init__(self):
         self.df             = None
@@ -81,24 +81,26 @@ class Data_set_reader(Data_Set):
         self.DBSCAN.plot_DBSCAN()
     
     def Random_Forest_analsysis(self,X,Y,forest_size,n_features):
-        self.Forest = RandomForest(X, Y, forest_size, n_features, len(Y))
+        self.Forest = RandomForest.RandomForest(X, Y, forest_size, n_features, Y.shape[0])
+        
 
     def Feature_Generator(self,feature,df):
-        feature = None
-        gen     = Features_generator()
+        data = None
+        gen     = Features_generator.Feature_Generator()
         if(feature == "diffs"):
-            gen.Generate_diffs()
-            feature = gen.diffs
+            gen.Generate_diffs(df)
+            data = gen.diffs
 
         elif(feature == "wind"):
-            gen.Generate_Generate_wind()
+            gen.Generate_wind(df)
             feature = gen.X_polar
-            feature = np.column_stack((feature,gen.Y_polar))
+            data = np.column_stack((feature,gen.Y_polar))
 
         elif(feature == "Frequency"):
-            gen.Generate_weight_freq_domain()
-            feature = gen.wfd
-        return feature
+            gen.Generate_weight_freq_domain(df)
+            data = gen.wfd
+        
+        return data
         
 
     def filter_one_sample(self,ID,batch_ID):

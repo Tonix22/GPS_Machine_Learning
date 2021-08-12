@@ -1,4 +1,5 @@
 import sys
+import numpy as np
 #include GPS
 import os
 import pathlib
@@ -16,13 +17,31 @@ def main():
     
     set = GPS_data.Data_set_reader()
     set.filter_one_sample(153,0)
+    set.filter_one_sample(153,1)
     #set.filter_one_sample(153,1)
 
     set.append_frame(115,0)
     set.append_frame(78,0)
-    set.append_frame(40,0)
-    
+    #set.append_frame(40,0)
+    Y = (set.filter_by_name['ASSET']==153).astype(int).to_numpy()
+    X = set.Feature_Generator("wind",set.filter_by_name)
+    X = np.column_stack((X,set.filter_by_name['REASONS'].to_numpy()))
 
+    set.Random_Forest_analsysis(X,Y,10,3)
+
+    it_is = []
+    set.filter_one_sample(153,2)
+    testing_size = len(set.filter_by_name)-1
+    for n in range (1,testing_size):
+        X = set.Feature_Generator("wind",set.filter_by_name[0:n])
+        X = np.column_stack((X,set.filter_by_name['REASONS'].to_numpy()[0:n]))
+        var = set.Forest.predict(X)
+        avg_recognized = np.average(var)
+        it_is.append(avg_recognized)
+        print("avg_"+str(n)+": "+str(avg_recognized))
+    
+    set.plot_generic(it_is)
+    set.plot_map()
     """
     #set.append_frame(78,1)
     set.PCA_analysis()

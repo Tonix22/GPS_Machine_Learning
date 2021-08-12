@@ -3,6 +3,7 @@ import math
 import pandas as pd
 import compas
 from scipy.stats import norm
+
 class Feature_Generator():
     def __init__(self):
         self.diffs = None

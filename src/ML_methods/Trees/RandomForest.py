@@ -8,7 +8,6 @@ import numpy as np
 #             This is usually equal to total number of rows but can be reduced 
 #             to increase performance and decrease correlation of trees in some cases.
 
-
 class RandomForest():
     def __init__(self, x, y, n_trees, n_features, sample_sz, depth=10, min_leaf=5):
         #just set the seed

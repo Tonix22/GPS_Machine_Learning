@@ -78,7 +78,7 @@ class Data_set_reader(Data_Set):
     
     def DBSCAN_analysis(self,X,Y):
         self.DBSCAN = Db_SCAN.DB_SCAN(X,Y)
-        self.DBSCAN.plot_DBSCAN()
+        #self.DBSCAN.plot_DBSCAN()
     
     def Random_Forest_analsysis(self,X,Y,forest_size,n_features):
         self.Forest = RandomForest.RandomForest(X, Y, forest_size, n_features, Y.shape[0])
@@ -86,7 +86,7 @@ class Data_set_reader(Data_Set):
 
     def Feature_Generator(self,feature,df):
         data = None
-        gen     = Features_generator.Feature_Generator()
+        gen  = Features_generator.Feature_Generator()
         if(feature == "diffs"):
             gen.Generate_diffs(df)
             data = gen.diffs
@@ -96,12 +96,14 @@ class Data_set_reader(Data_Set):
             feature = gen.X_polar
             data = np.column_stack((feature,gen.Y_polar))
 
-        elif(feature == "Frequency"):
+        elif(feature == "WFD"):
             gen.Generate_weight_freq_domain(df)
             data = gen.wfd
         
         return data
-        
+    
+    def get_all_IDS(self):
+        return self.df['ASSET'].unique()
 
     def filter_one_sample(self,ID,batch_ID):
         self.vehicule_id = ID

@@ -26,9 +26,13 @@ def plot_map(self):
 
     mplleaflet.show()
 
-def plot_generic(self,arr):
-    xi = list(range(len(arr)))
-    plt.plot(xi,arr,'b') # Draw blue line
+def plot_generic(self,arr,xi = None,scatter = False):
+    if(xi == None):
+        xi = list(range(len(arr)))
+    if(scatter):
+        plt.scatter(xi, arr)
+    else:
+        plt.plot(xi,arr,'b') # Draw blue line
     plt.show()
 
 def plot_speed(self):

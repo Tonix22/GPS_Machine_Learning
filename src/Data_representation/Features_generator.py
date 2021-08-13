@@ -50,19 +50,22 @@ class Feature_Generator():
     def Generate_weight_freq_domain(self,df):
         import datetime
         import time
-        time_diffs_size   = len(df.TIME)
+
+        time_diffs_size   = len(df.index)
         samples_time_diff = np.zeros(time_diffs_size)
         self.wfd          = np.zeros(time_diffs_size)
 
-        for i in range(1,time_diffs_size):
-            dt_i = datetime.datetime.strptime(df.TIME[i-1], "%m/%d/%Y %H:%M:%S %p")
+        j = 0
+        for i in range(df.index[0]+1,df.index[0]+time_diffs_size):
+            dt_i = datetime.datetime.strptime(df.TIME[i-1][:-3], "%m/%d/%Y %H:%M:%S")
             posix_dt_i = time.mktime(dt_i.timetuple())
 
-            dt_f = datetime.datetime.strptime(df.TIME[i], "%m/%d/%Y %H:%M:%S %p")
+            dt_f = datetime.datetime.strptime(df.TIME[i][:-3], "%m/%d/%Y %H:%M:%S")
             posix_dt_f = time.mktime(dt_f.timetuple())
 
             diff = posix_dt_f-posix_dt_i
-            samples_time_diff[i] = diff
+            samples_time_diff[j] = diff
+            j+=1
         
         #samples_time_diff = self.normalize_1d(samples_time_diff)
 
@@ -78,15 +81,19 @@ class Feature_Generator():
         normal_dist = norm.pdf(x, mu, std)
         diff_threshold = x[(len(self.diffs)*90)//100]
 
-        for i in range(0,len(samples_time_diff)-1):
+        j = 0
+        for i in range(df.index[0]+1,df.index[0]+time_diffs_size-1):
+
             reason = df['REASONS'][i]
 
-            if(self.diffs[i] <= diff_threshold and reason!=7): # reason 7 = device is on
-                self.wfd[i]   =  samples_time_diff[i]/avg_sample_rate
+            if(self.diffs[j] <= diff_threshold and reason!=7): # reason 7 = device is on
+                self.wfd[j]   =  samples_time_diff[j]/avg_sample_rate
             else:
-                self.wfd[i] = 1
-
-        import matplotlib.pyplot as plt
-        xi = list(range(len(self.wfd)))
-        plt.plot(xi,self.wfd, 'b') # Draw blue line
-        plt.show()
+                self.wfd[j] = 1
+            j+=1
+            
+        self.wfd = self.normalize_1d(self.wfd,t_min=-1,t_max=1)
+        #import matplotlib.pyplot as plt
+        #xi = list(range(len(self.wfd)))
+        #plt.plot(xi,self.wfd, 'b') # Draw blue line
+        #plt.show()

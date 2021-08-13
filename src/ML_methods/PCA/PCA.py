@@ -5,6 +5,7 @@ import sys, pathlib
 
 dirname  = str(pathlib.Path(__file__).parent.absolute())+"/../../"
 sys.path.insert(0, dirname)
+from params import PLT_PCA
 from params import PLT_COVARIANCE
 
 sys.path.insert(0, dirname+"Data_representation")
@@ -37,7 +38,7 @@ class PCA():
         #rowvar is set to False to get the covariance matrix in the required dimensions.
         cov_mat = np.cov(X_meaned , rowvar = False)
         
-        cols = ['Lat', 'Lon', 'Dif', 'Reas', 'X_plr','Y_plr']
+        cols = ['Lat', 'Lon', 'Dif', 'Reas', 'X_plr','Y_plr','wfd']
 
         if(PLT_COVARIANCE == True):
 
@@ -99,6 +100,8 @@ def PCA_analysis(self):
     ftg = Features_generator.Feature_Generator()
     ftg.Generate_diffs(self.filter_by_name)
     ftg.Generate_wind(self.filter_by_name)
+    ftg.Generate_weight_freq_domain(self.filter_by_name)
+    
 
     lat = self.filter_by_name["LATITUDE"].to_numpy()[1:]
     lat = lat*1000
@@ -118,14 +121,16 @@ def PCA_analysis(self):
     N   = ftg.normalize_1d(raw,t_min=-1,t_max=1)
     X   = np.column_stack((X,N))
     
+    X   = np.column_stack((X,ftg.wfd[1:]))
     X   = np.column_stack((X,ftg.X_polar[1:]))
     X   = np.column_stack((X,ftg.Y_polar[1:]))
-    
-    self.PCA = PCA(X,2, plot=False)
 
-    target = self.filter_by_name.iloc[:,1]
-    sns.scatterplot(x=self.PCA.mat_reduced[:,0], y=self.PCA.mat_reduced[:,1],s=60,hue = target[1:],palette= 'dark:salmon_r')
-    plt.show()
+    
+    self.PCA = PCA(X,4, plot=False)
+    if(PLT_PCA):
+        target = self.filter_by_name.iloc[:,1]
+        sns.scatterplot(x=self.PCA.mat_reduced[:,0], y=self.PCA.mat_reduced[:,1],s=60,hue = target[1:],palette= 'dark:salmon_r')
+        plt.show()
 
 
 

@@ -9,5 +9,6 @@ THRESHOLD_DIFF = 20
 START_DATA  = 0
 END_DATA    = -1
 
+PLT_PCA        = False
 PLT_ENABLE     = False
 PLT_COVARIANCE = False

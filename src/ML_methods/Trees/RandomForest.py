@@ -21,7 +21,7 @@ class RandomForest():
         else:
             self.n_features = n_features
         
-        print(self.n_features, "sha: ",x.shape[1])
+        #print(self.n_features, "sha: ",x.shape[1])
 
         #outside vars to internal
         self.x, self.y, self.sample_sz, self.depth, self.min_leaf  = x, y, sample_sz, depth, min_leaf

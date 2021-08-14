@@ -16,9 +16,13 @@ def main():
             set.filter_ID(n) # end data is not used
             set.densisty_coord()   # save data with low variance 
     
-    #test.random_forest_test()
+    test.random_forest_test()
     #test.PCA_DBSCAN_test()
-    test.Better_trainig()
+    #test.Better_trainig()
+    #test.Find_good_match()
+    
+
+    
 
     if("map" in sys.argv):
         set.plot_map()

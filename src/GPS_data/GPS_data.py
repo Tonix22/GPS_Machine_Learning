@@ -76,8 +76,8 @@ class Data_set_reader(Data_Set):
         self.Forest = None
         self.df     = pd.read_csv(FILTER_DATA)
     
-    def DBSCAN_analysis(self,X,Y):
-        self.DBSCAN = Db_SCAN.DB_SCAN(X,Y)
+    def DBSCAN_analysis(self,X,Y,eps=0.7,point=10):
+        self.DBSCAN = Db_SCAN.DB_SCAN(X,Y,eps=eps,min_p=point)
         #self.DBSCAN.plot_DBSCAN()
     
     def Random_Forest_analsysis(self,X,Y,forest_size,n_features):

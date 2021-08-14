@@ -12,3 +12,5 @@ END_DATA    = -1
 PLT_PCA        = False
 PLT_ENABLE     = False
 PLT_COVARIANCE = False
+
+DBSCAN_NORMALIZED = False

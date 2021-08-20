@@ -19,13 +19,6 @@ class PCA():
         self.components  = components
         self.mat_reduced = self.do_PCA(components)
         #Creating a Pandas DataFrame of reduced Dataset
-        """
-        self.principal_df = pd.DataFrame(self.mat_reduced , columns = ['PC1','PC2'])
-        if(plot == True):
-            plt.figure(figsize = (6,6))
-            sns.scatterplot(data = self.principal_df , x = 'PC1',y = 'PC2',palette= 'icefire')
-            plt.show()
-        """
 
     def percentage(self,x,total):
         return x / total
@@ -125,11 +118,13 @@ def PCA_analysis(self):
     X   = np.column_stack((X,ftg.X_polar[1:]))
     X   = np.column_stack((X,ftg.Y_polar[1:]))
 
-    
-    self.PCA = PCA(X,4, plot=False)
+    self.PCA = PCA(X,5, plot=False)
+
+    #ftg.normalize_1d(self.PCA.mat_reduced,t_min=0,t_max=1)
+
     if(PLT_PCA):
         target = self.filter_by_name.iloc[:,1]
-        sns.scatterplot(x=self.PCA.mat_reduced[:,0], y=self.PCA.mat_reduced[:,1],s=60,hue = target[1:],palette= 'dark:salmon_r')
+        sns.scatterplot(x=self.PCA.mat_reduced[:,0], y=self.PCA.mat_reduced[:,3],s=60,hue = target[1:],palette= 'dark:salmon_r')
         plt.show()
 
 

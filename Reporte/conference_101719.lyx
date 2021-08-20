@@ -9,6 +9,7 @@
 \IEEEoverridecommandlockouts
 % The preceding line is only needed to identify funding in the first footnote. If that is unneeded, please comment it out.
 \usepackage{cite}
+\usepackage{amsfonts}
 \usepackage{amsfonts}\usepackage{algorithmic}
 \usepackage{textcomp}
 \usepackage{xcolor}
@@ -189,8 +190,7 @@ Guadalajara, Jal, Mexico
 All vehicule drivers have some implicit profile that help us to recognize
  them.
  The target is to show an alert when a suspicus driving behaviour is detected.
- The main idea is to prevent car theft, or a rude behavior of drivers, that
- shall not be present at work.
+ The main idea is to prevent car theft or a rude behavior of drivers.
 \end_layout
 
 \begin_layout Section
@@ -198,14 +198,16 @@ Introduction
 \end_layout
 
 \begin_layout Standard
-The training data of the project is got from the city of city of cinnacity
- with give free sources of GPS and some other variants of public driving
+The training data of the project is got from the city of cinnacity which
+ give free sources of GPS data and some other variants for public driving
  services.
  This includes street sweepers, trash packers, and snow plows.
  Vehicles are identified by location and asset number.
  The main idea is to use this variables for use machine learning techniques
- for filter , preprocess data and then use neuronal networks to predict
- or train a behaviour of the the driver.
+ for filter , preprocess data and then use random forest to predict the
+ behaviour of the the driver.
+ Note that for each asset number we assume a diferent driver.
+ 
 \end_layout
 
 \begin_layout Section
@@ -220,7 +222,7 @@ First data clean up
 Once downloading the data set of the project, it could be seen that the
  .csv file was completely unsorted , so first of all it was needed to arrange
  them by vehicule ID, and then sort them by time, to do this task it was
- used pandas framework in python3.9 
+ used pandas framework in python3.6 
 \begin_inset CommandInset citation
 LatexCommand cite
 key "b1"
@@ -237,8 +239,8 @@ Remove GPS sensor errors
 \end_layout
 
 \begin_layout Standard
-The it was proceed to plot the data in a web browser with a ptyhon libary
- call mplleaflet
+Then there was ploted the data in a web browser with a python libary [mplleaflet
+]
 \begin_inset CommandInset citation
 LatexCommand cite
 key "b2"
@@ -246,10 +248,12 @@ key "b2"
 \end_inset
 
 .
- After just keep looking some maps plots, it was visualized that there were
- some GPS outlayer data because sensor sometimes has huge errors.
- The main move was to generate a feature that keep euclidian distance between
- points.
+ After look some maps plots, there has been some GPS outlier data because
+ sensor sometimes has huge errors.
+ To solve this problem the main idea was to generate a feature that track
+ euclidian distance between points, and remove certain points that overstepped
+ the bounds of a threshold.
+ 
 \end_layout
 
 \begin_layout Standard
@@ -312,7 +316,7 @@ status collapsed
 \begin_inset Caption Standard
 
 \begin_layout Plain Layout
-GPS noisy data
+GPS noisy data, line across the map
 \end_layout
 
 \end_inset
@@ -333,14 +337,19 @@ name "fig-1"
 \end_layout
 
 \begin_layout Standard
-For this feature there are taken batches of 100 samples to generate a normal
- distribution, and then move the maximum likelihood to the max value of
- the batch, then set a threshold of 95% of acceptance, so any value that
- is bigger than 95% likelihood it will be descarded and checked as outlier.
- When this happens I split the data and generate a new sub data set, with
- new data input values, and then continue doing batches of the same size.
- This help me to work with individual files that are shorter and has more
- likely data.
+To set up the threshold it was set a filter which take batches of 100 samples
+ to generate a normal distribution, then it move the maximum likelihood
+ to the max value of the batch, and set a threshold of 95% of acceptance.
+ So any value that is bigger than 95% likelihood it will be discarded and
+ checked as an outlier.
+ First this proces generate a gaussian curve in sample N and then we use
+ the gaussian filter in N+1.
+ So if the upcoming data has not likely data the set split into a new set,
+ and the noisy point is removed.
+ Then this was made so on with the next batches of 100 samples.
+ This help to work with individual files that are shorter and has more likely
+ data, and on the other hand, we could used them as training and testing
+ data because they belong to the same driver, however the GPS fails.
  
 \end_layout
 
@@ -407,18 +416,20 @@ status collapsed
 \end_layout
 
 \begin_layout Subsection
-Features Description
+Features Generation
 \end_layout
 
 \begin_layout Standard
-For the given data there there is used this default features: LATITUDE,LONGITUDE
-,REASONS,SPEED, HEADING.
- However from this ones there was generated other ones as DIFFS, X_POLAR
- ,Y_POLAR.
+For the given data has this default features: LATITUDE,LONGITUDE,REASONS,SPEED,
+ HEADING,TIME.
+ On the other hand this features were not good enought.
+ This drives to generate other features that supplement the information,
+ some of this generated features are: Distance between points, X_POLAR ,Y_POLAR,
+ and Weighted Frequency Domain.
  The first one is the distance of the points of GPS, it is the same used
  for extract outliers.
- The polar cordinates are gotten from a combination of SPEED and HEADING(compas
- split on 16 directions).
+ Morever the polar cordinates are gotten from a combination of SPEED and
+ HEADING(compas split on 16 directions).
 \begin_inset ERT
 status open
 
@@ -455,16 +466,128 @@ newline
 
 \end_layout
 
+\begin_layout Standard
+\begin_inset Float figure
+wide false
+sideways false
+status open
+
+\begin_layout Plain Layout
+\begin_inset Graphics
+	filename polar_and map.png
+	scale 50
+
+\end_inset
+
+
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
+Polar cordantes representation with cleaner data
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\noindent
+The Weighted Frequency Domain is a measurment of how long it was a vehicule
+ in certain place.
+ Where 
+\begin_inset Formula $f_{s}$
+\end_inset
+
+ = average sampling frequency, and we could get if device is ON or OFF withe
+ the REASONS feature.
+ 
+\begin_inset CommandInset citation
+LatexCommand cite
+key "b3"
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset ERT
+status open
+
+\begin_layout Plain Layout
+
+
+\backslash
+begin{equation*} w_f(x_i)=
+\backslash
+begin{cases}           
+\end_layout
+
+\begin_layout Plain Layout
+
+		
+\backslash
+frac{t_{i+1}-t_i}{f_s} 
+\backslash
+quad &
+\backslash
+text{if} 
+\backslash
+, dist(x_i,x_{i+1}) <= 
+\backslash
+lambda 
+\backslash
+wedge 
+\backslash
+textrm{ON}
+\backslash
+
+\backslash
+
+\end_layout
+
+\begin_layout Plain Layout
+
+       1 
+\backslash
+quad &
+\backslash
+text{otherwise}
+\backslash
+
+\backslash
+ 
+\backslash
+end{cases} 
+\backslash
+end{equation*}
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
 \begin_layout Subsection
 PCA
 \end_layout
 
 \begin_layout Standard
-The PCA is used to obtain the most relevant features of the data.
+Once all features are generated the PCA is used to obtain the most relevant
+ features of the data.
  In the image below it could be seen that the latitude and longitude variables
- depend on each other, which it must be discarded because they are not orthogona
-l and the only thing they do is to give unnecessary information.It may rather
- polar coordinates chosen because they are ortogonal.
+ depend on each other so they are highly correlated, which it must be discarded
+ because they are not orthogonal and the only thing they do is to give unnecessa
+ry information.
+ Intead we vould observed that WFD and polar cordenates has lower covariance
+ with other varables and between each other.
+ 
 \end_layout
 
 \begin_layout Standard
@@ -505,13 +628,12 @@ Correlation as step to get PCA
 
 \begin_layout Standard
 \noindent
-Then, after centering the correlation matrix and obtaining the eigenvalues
- and eingvectors.
- It will be sort them by their degree of contribution to the set of features.
- This provide a more clear overview of which features select and discard
- others ones that may not contribute to much.
- As it was said before the most ortogonals variables was the polar cordenates,
- so it be very possible that they are the winners of the PCA.
+When the correlation matrix is centerd and the eigenvalues and eingvectors
+ are arranged, we could visualize the relevance for each feature.
+ This provide a more clear overview of which features should be selected
+ and discarded in relation with others ones that may not contribute to much.
+ As it was said before the most ortogonals variables was the wfd, and polar
+ cordenates, so it be very possible that they are the winners of the PCA.
  
 \end_layout
 
@@ -553,40 +675,6 @@ PCA relevance
  is not being used the Lat and Lon data, but we may use other strategies
  in the future to make them more useful.
  
-\end_layout
-
-\begin_layout Standard
-\begin_inset Float figure
-wide false
-sideways false
-status open
-
-\begin_layout Plain Layout
-\begin_inset Graphics
-	filename polar_and map.png
-	scale 50
-
-\end_inset
-
-
-\begin_inset Caption Standard
-
-\begin_layout Plain Layout
-Polar cordantes representation
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Plain Layout
-
-\end_layout
-
-\end_inset
-
-
 \end_layout
 
 \begin_layout Standard
@@ -636,1150 +724,47 @@ PCA between Vehicules
 
 \end_layout
 
-\begin_layout Plain Layout
-
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Section
-Prepare Your Paper Before Styling
-\end_layout
-
-\begin_layout Standard
-Before you begin to format your paper, first write and save the content
- as a separate text file.
- Complete all content and organizational editing before formatting.
- Please note sections 
-\begin_inset CommandInset ref
-LatexCommand ref
-reference "AA"
-
-\end_inset
-
-–
-\begin_inset CommandInset ref
-LatexCommand ref
-reference "SCM"
-
-\end_inset
-
- below for more information on proofreading, spelling and grammar.
-\end_layout
-
-\begin_layout Standard
-Keep your text and graphic files separate until after the text has been
- formatted and styled.
- Do not number text heads—
-\begin_inset ERT
-status collapsed
-
-\begin_layout Plain Layout
-
-{
-\end_layout
-
-\end_inset
-
-\SpecialChar LaTeX
-
-\begin_inset ERT
-status collapsed
-
-\begin_layout Plain Layout
-
-}
-\end_layout
-
-\end_inset
-
- will do that for you.
-\end_layout
-
-\begin_layout Subsection
-Abbreviations and Acronyms
-\end_layout
-
-\begin_layout Standard
-\begin_inset CommandInset label
-LatexCommand label
-name "AA"
-
-\end_inset
-
- Define abbreviations and acronyms the first time they are used in the text,
- even after they have been defined in the abstract.
- Abbreviations such as IEEE, SI, MKS, CGS, ac, dc, and rms do not have to
- be defined.
- Do not use abbreviations in the title or heads unless they are unavoidable.
-\end_layout
-
-\begin_layout Subsection
-Units
-\end_layout
-
-\begin_layout Itemize
-Use either SI (MKS) or CGS as primary units.
- (SI units are encouraged.) English units may be used as secondary units
- (in parentheses).
- An exception would be the use of English units as identifiers in trade,
- such as 
-\begin_inset Quotes eld
-\end_inset
-
-3.5-inch disk drive
-\begin_inset Quotes erd
-\end_inset
-
-.
- 
-\end_layout
-
-\begin_layout Itemize
-Avoid combining SI and CGS units, such as current in amperes and magnetic
- field in oersteds.
- This often leads to confusion because equations do not balance dimensionally.
- If you must use mixed units, clearly state the units for each quantity
- that you use in an equation.
- 
-\end_layout
-
-\begin_layout Itemize
-Do not mix complete spellings and abbreviations of units: 
-\begin_inset Quotes eld
-\end_inset
-
-Wb/m
-\begin_inset script superscript
-
-\begin_layout Plain Layout
-2
-\end_layout
-
-\end_inset
-
-
-\begin_inset Quotes erd
-\end_inset
-
- or 
-\begin_inset Quotes eld
-\end_inset
-
-webers per square meter
-\begin_inset Quotes erd
-\end_inset
-
-, not 
-\begin_inset Quotes eld
-\end_inset
-
-webers/m
-\begin_inset script superscript
-
-\begin_layout Plain Layout
-2
-\end_layout
-
-\end_inset
-
-
-\begin_inset Quotes erd
-\end_inset
-
-.
- Spell out units when they appear in text: 
-\begin_inset Quotes eld
-\end_inset
-
-.
- .
- .
- a few henries
-\begin_inset Quotes erd
-\end_inset
-
-, not 
-\begin_inset Quotes eld
-\end_inset
-
-.
- .
- .
- a few H
-\begin_inset Quotes erd
-\end_inset
-
-.
- 
-\end_layout
-
-\begin_layout Itemize
-Use a zero before decimal points: 
-\begin_inset Quotes eld
-\end_inset
-
-0.25
-\begin_inset Quotes erd
-\end_inset
-
-, not 
-\begin_inset Quotes eld
-\end_inset
-
-.25
-\begin_inset Quotes erd
-\end_inset
-
-.
- Use 
-\begin_inset Quotes eld
-\end_inset
-
-cm
-\begin_inset script superscript
-
-\begin_layout Plain Layout
-3
-\end_layout
-
-\end_inset
-
-
-\begin_inset Quotes erd
-\end_inset
-
-, not 
-\begin_inset Quotes eld
-\end_inset
-
-cc
-\begin_inset Quotes erd
-\end_inset
-
-.) 
-\end_layout
-
-\begin_layout Subsection
-Equations
-\end_layout
-
-\begin_layout Standard
-Number equations consecutively.
- To make your equations more compact, you may use the solidus (
-\begin_inset space ~
-\end_inset
-
-/
-\begin_inset space ~
-\end_inset
-
-), the exp function, or appropriate exponents.
- Italicize Roman symbols for quantities and variables, but not Greek symbols.
- Use a long dash rather than a hyphen for a minus sign.
- Punctuate equations with commas or periods when they are part of a sentence,
- as in: 
-\begin_inset Formula 
-\begin{equation}
-a+b=\gamma\label{eq}
-\end{equation}
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Standard
-Be sure that the symbols in your equation have been defined before or immediatel
-y following the equation.
- Use 
-\begin_inset Quotes eld
-\end_inset
-
-
-\begin_inset CommandInset ref
-LatexCommand eqref
-reference "eq"
-
-\end_inset
-
-
-\begin_inset Quotes erd
-\end_inset
-
-, not 
-\begin_inset Quotes eld
-\end_inset
-
-Eq.
-\begin_inset space ~
-\end_inset
-
-
-\begin_inset CommandInset ref
-LatexCommand eqref
-reference "eq"
-
-\end_inset
-
-
-\begin_inset Quotes erd
-\end_inset
-
- or 
-\begin_inset Quotes eld
-\end_inset
-
-equation 
-\begin_inset CommandInset ref
-LatexCommand eqref
-reference "eq"
-
-\end_inset
-
-
-\begin_inset Quotes erd
-\end_inset
-
-, except at the beginning of a sentence: 
-\begin_inset Quotes eld
-\end_inset
-
-Equation 
-\begin_inset CommandInset ref
-LatexCommand eqref
-reference "eq"
-
-\end_inset
-
- is .
- .
- .
-\begin_inset Quotes erd
 \end_inset
 
 
 \end_layout
 
 \begin_layout Subsection
-\SpecialChar LaTeX
--Specific Advice
+DBSCAN
 \end_layout
 
 \begin_layout Standard
-Please use 
-\begin_inset Quotes eld
-\end_inset
-
-soft
-\begin_inset Quotes erd
-\end_inset
-
- (e.g., 
-\begin_inset ERT
-status collapsed
-
-\begin_layout Plain Layout
-
-
-\backslash
-verb|
-\backslash
-eqref{Eq}|
-\end_layout
-
-\end_inset
-
-) cross references instead of 
-\begin_inset Quotes eld
-\end_inset
-
-hard
-\begin_inset Quotes erd
-\end_inset
-
- references (e.g., 
-\begin_inset ERT
-status collapsed
-
-\begin_layout Plain Layout
-
-
-\backslash
-verb|(1)|
-\end_layout
-
-\end_inset
-
-).
- That will make it possible to combine sections, add equations, or change
- the order of figures or citations without having to go through the file
- line by line.
-\end_layout
-
-\begin_layout Standard
-Please don't use the 
-\begin_inset ERT
-status collapsed
-
-\begin_layout Plain Layout
-
-
-\backslash
-verb|{eqnarray}|
-\end_layout
-
-\end_inset
-
- equation environment.
- Use 
-\begin_inset ERT
-status collapsed
-
-\begin_layout Plain Layout
-
-
-\backslash
-verb|{align}|
-\end_layout
-
-\end_inset
-
- or 
-\begin_inset ERT
-status collapsed
-
-\begin_layout Plain Layout
-
-
-\backslash
-verb|{IEEEeqnarray}|
-\end_layout
-
-\end_inset
-
- instead.
- The 
-\begin_inset ERT
-status collapsed
-
-\begin_layout Plain Layout
-
-
-\backslash
-verb|{eqnarray}|
-\end_layout
-
-\end_inset
-
- environment leaves unsightly spaces around relation symbols.
-\end_layout
-
-\begin_layout Standard
-Please note that the 
-\begin_inset ERT
-status collapsed
-
-\begin_layout Plain Layout
-
-
-\backslash
-verb|{subequations}|
-\end_layout
-
-\end_inset
-
- environment in 
-\begin_inset ERT
-status collapsed
-
-\begin_layout Plain Layout
-
-{
-\end_layout
-
-\end_inset
-
-\SpecialChar LaTeX
-
-\begin_inset ERT
-status collapsed
-
-\begin_layout Plain Layout
-
-}
-\end_layout
-
-\end_inset
-
- will increment the main equation counter even when there are no equation
- numbers displayed.
- If you forget that, you might write an article in which the equation numbers
- skip from (17) to (20), causing the copy editors to wonder if you've discovered
- a new method of counting.
-\end_layout
-
-\begin_layout Standard
-\begin_inset ERT
-status collapsed
-
-\begin_layout Plain Layout
-
-{
-\end_layout
-
-\end_inset
-
-
-\begin_inset ERT
-status collapsed
-
-\begin_layout Plain Layout
-
-
-\backslash
-BibTeX
-\end_layout
-
-\end_inset
-
-
-\begin_inset ERT
-status collapsed
-
-\begin_layout Plain Layout
-
-}
-\end_layout
-
-\end_inset
-
- does not work by magic.
- It doesn't get the bibliographic data from thin air but from .bib files.
- If you use 
-\begin_inset ERT
-status collapsed
-
-\begin_layout Plain Layout
-
-{
-\end_layout
-
-\end_inset
-
-
-\begin_inset ERT
-status collapsed
-
-\begin_layout Plain Layout
-
-
-\backslash
-BibTeX
-\end_layout
-
-\end_inset
-
-
-\begin_inset ERT
-status collapsed
-
-\begin_layout Plain Layout
-
-}
-\end_layout
-
-\end_inset
-
- to produce a bibliography you must send the .bib files.
-\end_layout
-
-\begin_layout Standard
-\begin_inset ERT
-status collapsed
-
-\begin_layout Plain Layout
-
-{
-\end_layout
-
-\end_inset
-
-\SpecialChar LaTeX
-
-\begin_inset ERT
-status collapsed
-
-\begin_layout Plain Layout
-
-}
-\end_layout
-
-\end_inset
-
- can't read your mind.
- If you assign the same label to a subsubsection and a table, you might
- find that Table I has been cross referenced as Table IV-B3.
-\end_layout
-
-\begin_layout Standard
-\begin_inset ERT
-status collapsed
-
-\begin_layout Plain Layout
-
-{
-\end_layout
-
-\end_inset
-
-\SpecialChar LaTeX
-
-\begin_inset ERT
-status collapsed
-
-\begin_layout Plain Layout
-
-}
-\end_layout
-
-\end_inset
-
- does not have precognitive abilities.
- If you put a 
-\begin_inset ERT
-status collapsed
-
-\begin_layout Plain Layout
-
-
-\backslash
-verb|
-\backslash
-label|
-\end_layout
-
-\end_inset
-
- command before the command that updates the counter it's supposed to be
- using, the label will pick up the last counter to be cross referenced instead.
- In particular, a 
-\begin_inset ERT
-status collapsed
-
-\begin_layout Plain Layout
-
-
-\backslash
-verb|
-\backslash
-label|
-\end_layout
-
-\end_inset
-
- command should not go before the caption of a figure or a table.
-\end_layout
-
-\begin_layout Standard
-Do not use 
-\begin_inset ERT
-status collapsed
-
-\begin_layout Plain Layout
-
-
-\backslash
-verb|
-\backslash
-nonumber|
-\end_layout
-
-\end_inset
-
- inside the 
-\begin_inset ERT
-status collapsed
-
-\begin_layout Plain Layout
-
-
-\backslash
-verb|{array}|
-\end_layout
-
-\end_inset
-
- environment.
- It will not stop equation numbers inside 
-\begin_inset ERT
-status collapsed
-
-\begin_layout Plain Layout
-
-
-\backslash
-verb|{array}|
-\end_layout
-
-\end_inset
-
- (there won't be any anyway) and it might stop a wanted equation number
- in the surrounding equation.
-\end_layout
-
-\begin_layout Subsection
-Some Common Mistakes
-\end_layout
-
-\begin_layout Standard
-\begin_inset CommandInset label
-LatexCommand label
-name "SCM"
-
-\end_inset
-
- 
-\end_layout
-
-\begin_layout Itemize
-The word 
-\begin_inset Quotes eld
-\end_inset
-
-data
-\begin_inset Quotes erd
-\end_inset
-
- is plural, not singular.
- 
-\end_layout
-
-\begin_layout Itemize
-The subscript for the permeability of vacuum 
-\begin_inset Formula $\mu_{0}$
-\end_inset
-
-, and other common scientific constants, is zero with subscript formatting,
- not a lowercase letter 
-\begin_inset Quotes eld
-\end_inset
-
-o
-\begin_inset Quotes erd
-\end_inset
-
-.
- 
-\end_layout
-
-\begin_layout Itemize
-In American English, commas, semicolons, periods, question and exclamation
- marks are located within quotation marks only when a complete thought or
- name is cited, such as a title or full quotation.
- When quotation marks are used, instead of a bold or italic typeface, to
- highlight a word or phrase, punctuation should appear outside of the quotation
- marks.
- A parenthetical phrase or statement at the end of a sentence is punctuated
- outside of the closing parenthesis (like this).
- (A parenthetical sentence is punctuated within the parentheses.) 
-\end_layout
-
-\begin_layout Itemize
-A graph within a graph is an 
-\begin_inset Quotes eld
-\end_inset
-
-inset
-\begin_inset Quotes erd
-\end_inset
-
-, not an 
-\begin_inset Quotes eld
-\end_inset
-
-insert
-\begin_inset Quotes erd
-\end_inset
-
-.
- The word alternatively is preferred to the word 
-\begin_inset Quotes eld
-\end_inset
-
-alternately
-\begin_inset Quotes erd
-\end_inset
-
- (unless you really mean something that alternates).
- 
-\end_layout
-
-\begin_layout Itemize
-Do not use the word 
-\begin_inset Quotes eld
-\end_inset
-
-essentially
-\begin_inset Quotes erd
-\end_inset
-
- to mean 
-\begin_inset Quotes eld
-\end_inset
-
-approximately
-\begin_inset Quotes erd
-\end_inset
-
- or 
-\begin_inset Quotes eld
-\end_inset
-
-effectively
-\begin_inset Quotes erd
-\end_inset
-
-.
- 
-\end_layout
-
-\begin_layout Itemize
-In your paper title, if the words 
-\begin_inset Quotes eld
-\end_inset
-
-that uses
-\begin_inset Quotes erd
-\end_inset
-
- can accurately replace the word 
-\begin_inset Quotes eld
-\end_inset
-
-using
-\begin_inset Quotes erd
-\end_inset
-
-, capitalize the 
-\begin_inset Quotes eld
-\end_inset
-
-u
-\begin_inset Quotes erd
-\end_inset
-
-; if not, keep using lower-cased.
- 
-\end_layout
-
-\begin_layout Itemize
-Be aware of the different meanings of the homophones 
-\begin_inset Quotes eld
-\end_inset
-
-affect
-\begin_inset Quotes erd
-\end_inset
-
- and 
-\begin_inset Quotes eld
-\end_inset
-
-effect
-\begin_inset Quotes erd
-\end_inset
-
-, 
-\begin_inset Quotes eld
-\end_inset
-
-complement
-\begin_inset Quotes erd
-\end_inset
-
- and 
-\begin_inset Quotes eld
-\end_inset
-
-compliment
-\begin_inset Quotes erd
-\end_inset
-
-, 
-\begin_inset Quotes eld
-\end_inset
-
-discreet
-\begin_inset Quotes erd
-\end_inset
-
- and 
-\begin_inset Quotes eld
-\end_inset
-
-discrete
-\begin_inset Quotes erd
-\end_inset
-
-, 
-\begin_inset Quotes eld
-\end_inset
-
-principal
-\begin_inset Quotes erd
-\end_inset
-
- and 
-\begin_inset Quotes eld
-\end_inset
-
-principle
-\begin_inset Quotes erd
-\end_inset
-
-.
- 
-\end_layout
-
-\begin_layout Itemize
-Do not confuse 
-\begin_inset Quotes eld
-\end_inset
-
-imply
-\begin_inset Quotes erd
-\end_inset
-
- and 
-\begin_inset Quotes eld
-\end_inset
-
-infer
-\begin_inset Quotes erd
-\end_inset
-
-.
- 
-\end_layout
-
-\begin_layout Itemize
-The prefix 
-\begin_inset Quotes eld
-\end_inset
-
-non
-\begin_inset Quotes erd
-\end_inset
-
- is not a word; it should be joined to the word it modifies, usually without
- a hyphen.
- 
-\end_layout
-
-\begin_layout Itemize
-There is no period after the 
-\begin_inset Quotes eld
-\end_inset
-
-et
-\begin_inset Quotes erd
-\end_inset
-
- in the Latin abbreviation 
-\begin_inset Quotes eld
-\end_inset
-
-et al.
-\begin_inset Quotes erd
-\end_inset
-
-.
- 
-\end_layout
-
-\begin_layout Itemize
-The abbreviation 
-\begin_inset Quotes eld
-\end_inset
-
-i.e.
-\begin_inset Quotes erd
-\end_inset
-
- means 
-\begin_inset Quotes eld
-\end_inset
-
-that is
-\begin_inset Quotes erd
-\end_inset
-
-, and the abbreviation 
-\begin_inset Quotes eld
-\end_inset
-
-e.g.
-\begin_inset Quotes erd
-\end_inset
-
- means 
-\begin_inset Quotes eld
-\end_inset
-
-for example
-\begin_inset Quotes erd
-\end_inset
-
-.
+The DBSCAN algorithm will help to determine if two cluster from the PCA
+ output are seperable.
+ Thhe advantage of this one between K-means is that doesn't be determined
+ the number of cluster a priori, also there are not round shaped, and has
+ notion of noise.
  
 \end_layout
 
 \begin_layout Standard
-An excellent style manual for science writers is 
-\begin_inset CommandInset citation
-LatexCommand cite
-key "b7"
-
-\end_inset
-
-.
-\end_layout
-
-\begin_layout Subsection
-Authors and Affiliations
-\end_layout
-
-\begin_layout Standard
-
-\series bold
-The class file is designed for, but not limited to, six authors.
-
-\series default
- A minimum of one author is required for all conference articles.
- Author names should be listed starting from left to right and then moving
- down to the next line.
- This is the author sequence that will be used in future citations and by
- indexing services.
- Names should not be listed in columns nor group by affiliation.
- Please keep your affiliations as succinct as possible (for example, do
- not differentiate among departments of the same organization).
-\end_layout
-
-\begin_layout Subsection
-Identify the Headings
-\end_layout
-
-\begin_layout Standard
-Headings, or heads, are organizational devices that guide the reader through
- your paper.
- There are two types: component heads and text heads.
-\end_layout
-
-\begin_layout Standard
-Component heads identify the different components of your paper and are
- not topically subordinate to each other.
- Examples include Acknowledgments and References and, for these, the correct
- style to use is 
-\begin_inset Quotes eld
-\end_inset
-
-Heading 5
-\begin_inset Quotes erd
-\end_inset
-
-.
- Use 
-\begin_inset Quotes eld
-\end_inset
-
-figure caption
-\begin_inset Quotes erd
-\end_inset
-
- for your Figure captions, and 
-\begin_inset Quotes eld
-\end_inset
-
-table head
-\begin_inset Quotes erd
-\end_inset
-
- for your table title.
- Run-in heads, such as 
-\begin_inset Quotes eld
-\end_inset
-
-Abstract
-\begin_inset Quotes erd
-\end_inset
-
-, will require you to apply a style (in this case, italic) in addition to
- the style provided by the drop down menu to differentiate the head from
- the text.
-\end_layout
-
-\begin_layout Standard
-Text heads organize the topics on a relational, hierarchical basis.
- For example, the paper title is the primary text head because all subsequent
- material relates and elaborates on this one topic.
- If there are two or more sub-topics, the next level head (uppercase Roman
- numerals) should be used and, conversely, if there are not at least two
- sub-topics, then no subheads should be introduced.
-\end_layout
-
-\begin_layout Subsection
-Figures and Tables
-\end_layout
-
-\begin_layout Paragraph
-Positioning Figures and Tables
-\end_layout
-
-\begin_layout Standard
-Place figures and tables at the top and bottom of columns.
- Avoid placing them in the middle of columns.
- Large figures and tables may span across both columns.
- Figure captions should be below the figures; table heads should appear
- above the tables.
- Insert figures and tables after they are cited in the text.
- Use the abbreviation 
-\begin_inset Quotes eld
-\end_inset
-
-Fig.
-\begin_inset space ~
-\end_inset
-
-
-\begin_inset CommandInset ref
-LatexCommand ref
-reference "fig"
-
-\end_inset
-
-
-\begin_inset Quotes erd
-\end_inset
-
-, even at the beginning of a sentence.
-\end_layout
-
-\begin_layout Standard
-\begin_inset Float table
-placement htbp
+\begin_inset Float figure
+placement H
 wide false
 sideways false
 status open
 
 \begin_layout Plain Layout
+\align center
+\begin_inset Graphics
+	filename Map_with_DBSCAN.png
+	scale 30
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
 \begin_inset Caption Standard
 
 \begin_layout Plain Layout
-Table Type Styles
+DBSCAN of two different drivers
 \end_layout
 
 \end_inset
@@ -1787,207 +772,37 @@ Table Type Styles
 
 \end_layout
 
-\begin_layout Plain Layout
-\align center
-\begin_inset Tabular
-<lyxtabular version="3" rows="4" columns="4">
-<features tabularvalignment="middle">
-<column alignment="center" valignment="top">
-<column alignment="center" valignment="top">
-<column alignment="center" valignment="top">
-<column alignment="center" valignment="top">
-<row>
-<cell alignment="center" valignment="top" topline="true" leftline="true" rightline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-
-\series bold
-Table
-\end_layout
-
 \end_inset
-</cell>
-<cell multicolumn="1" alignment="none" valignment="top" topline="true" rightline="true" usebox="none" special="c">
-\begin_inset Text
 
-\begin_layout Plain Layout
-
-\series bold
-Table Column Head
-\end_layout
-
-\end_inset
-</cell>
-<cell multicolumn="2" alignment="center" valignment="top" topline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
 
 \end_layout
 
-\end_inset
-</cell>
-<cell multicolumn="2" alignment="center" valignment="top" topline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-
-\end_layout
-
-\end_inset
-</cell>
-</row>
-<row>
-<cell alignment="center" valignment="top" topline="true" leftline="true" rightline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-
-\series bold
-Head
-\series default
+\begin_layout Standard
+On the other hand it has two hyperparamters for good and not supervised
+ clasification.
+ Epislon and min num of cluster, which they are looked by bruteforce searching,
+ the main idea is to compare one by one driver with a target driver, so
+ there are certain hyperparameters wich give higher number of clusters,
+ but the may be produce noise them toghter, so we will look for a medium
+ solution, and we may need to score this clasification in other way, and
+ there is where random forest is used.
  
 \end_layout
 
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" topline="true" rightline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-
-\series bold
-\shape italic
-Table column subhead
+\begin_layout Subsection
+Random Forest
 \end_layout
 
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" topline="true" rightline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-
-\series bold
-\shape italic
-Subhead
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" topline="true" rightline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-
-\series bold
-\shape italic
-Subhead
-\series default
-\shape default
- 
-\end_layout
-
-\end_inset
-</cell>
-</row>
-<row>
-<cell alignment="center" valignment="top" topline="true" leftline="true" rightline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-copy
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" topline="true" rightline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-More table copy
-\begin_inset Formula $^{\mathrm{a}}$
-\end_inset
-
-
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" topline="true" rightline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="none" valignment="top" topline="true" rightline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-
-\end_layout
-
-\end_inset
-</cell>
-</row>
-<row>
-<cell multicolumn="1" alignment="none" valignment="top" topline="true" usebox="none" special="l">
-\begin_inset Text
-
-\begin_layout Plain Layout
-\begin_inset Formula $^{\mathrm{a}}$
-\end_inset
-
-Sample of a Table footnote.
-\end_layout
-
-\end_inset
-</cell>
-<cell multicolumn="2" alignment="center" valignment="top" topline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-
-\end_layout
-
-\end_inset
-</cell>
-<cell multicolumn="2" alignment="center" valignment="top" topline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-
-\end_layout
-
-\end_inset
-</cell>
-<cell multicolumn="2" alignment="center" valignment="top" topline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-
-\end_layout
-
-\end_inset
-</cell>
-</row>
-</lyxtabular>
-
-\end_inset
-
-
-\begin_inset CommandInset label
-LatexCommand label
-name "tab1"
-
-\end_inset
-
- 
-\end_layout
+\begin_layout Standard
+Random Forest is selected as averaging 15 trees, this was totaly experimental.
+ As more trees are added there is not visual difference.
+ To find the best split a single tree there was ran multiple times different
+ posibilities, and the calculate its variance.
+ The one with less variance will be the best fit.
+ So this mean de desicion will be the better.
+\begin_inset CommandInset citation
+LatexCommand cite
+key "b5"
 
 \end_inset
 
@@ -1996,351 +811,194 @@ name "tab1"
 
 \begin_layout Standard
 \begin_inset Float figure
-placement htbp
+placement H
 wide false
 sideways false
 status open
 
 \begin_layout Plain Layout
-\begin_inset ERT
-status collapsed
-
-\begin_layout Plain Layout
-
-
-\backslash
-centerline{
-\end_layout
-
-\end_inset
-
-
+\align center
 \begin_inset Graphics
-	filename fig1.png
+	filename Splitree.png
+	scale 40
 
 \end_inset
 
 
-\begin_inset ERT
-status collapsed
-
-\begin_layout Plain Layout
-
-}
-\end_layout
-
-\end_inset
-
- 
 \begin_inset Caption Standard
 
 \begin_layout Plain Layout
-Example of a figure caption.
+Example of one split
 \end_layout
 
 \end_inset
 
 
-\begin_inset CommandInset label
-LatexCommand label
-name "fig"
+\end_layout
 
 \end_inset
 
+
+\end_layout
+
+\begin_layout Standard
+Spliting the target driver in training data and testing data, we have a
+ good training over the time with random Forest.
+ The main idea is to test in average result of N samples, and append more
+ samples over the time.
+ At first instance the model is confused to recognized if the driver is
+ indeed himself, then as time passes it does better.
  
 \end_layout
 
+\begin_layout Standard
+\begin_inset Float figure
+placement H
+wide false
+sideways false
+status open
+
+\begin_layout Plain Layout
+\noindent
+\align left
+\begin_inset Graphics
+	filename Overtime.png
+	lyxscale 50
+	scale 50
+
 \end_inset
 
 
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
+Random Forest Training
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Subsection
+Mixed Strategy
 \end_layout
 
 \begin_layout Standard
-Figure Labels: Use 8 point Times New Roman for Figure labels.
- Use words rather than symbols or abbreviations when writing Figure axis
- labels to avoid confusing the reader.
- As an example, write the quantity 
-\begin_inset Quotes eld
-\end_inset
-
-Magnetization
-\begin_inset Quotes erd
-\end_inset
-
-, or 
-\begin_inset Quotes eld
-\end_inset
-
-Magnetization, M
-\begin_inset Quotes erd
-\end_inset
-
-, not just 
-\begin_inset Quotes eld
-\end_inset
-
-M
-\begin_inset Quotes erd
-\end_inset
-
-.
- If including units in the label, present them within parentheses.
- Do not label axes only with units.
- In the example, write 
-\begin_inset Quotes eld
-\end_inset
-
-Magnetization (A/m)
-\begin_inset Quotes erd
-\end_inset
-
- or 
-\begin_inset Quotes eld
-\end_inset
-
-Magnetization {A[m(1)]}
-\begin_inset Quotes erd
-\end_inset
-
-, not just 
-\begin_inset Quotes eld
-\end_inset
-
-A/m
-\begin_inset Quotes erd
-\end_inset
-
-.
- Do not label axes with a ratio of quantities and units.
- For example, write 
-\begin_inset Quotes eld
-\end_inset
-
-Temperature (K)
-\begin_inset Quotes erd
-\end_inset
-
-, not 
-\begin_inset Quotes eld
-\end_inset
-
-Temperature/K
-\begin_inset Quotes erd
-\end_inset
-
-.
-\end_layout
-
-\begin_layout Section*
-Acknowledgment
-\end_layout
-
-\begin_layout Standard
-The preferred spelling of the word 
-\begin_inset Quotes eld
-\end_inset
-
-acknowledgment
-\begin_inset Quotes erd
-\end_inset
-
- in America is without an 
-\begin_inset Quotes eld
-\end_inset
-
-e
-\begin_inset Quotes erd
-\end_inset
-
- after the 
-\begin_inset Quotes eld
-\end_inset
-
-g
-\begin_inset Quotes erd
-\end_inset
-
-.
- Avoid the stilted expression 
-\begin_inset Quotes eld
-\end_inset
-
-one of us (R.
- B.
- G.) thanks 
-\begin_inset Formula $\ldots$
-\end_inset
-
-
-\begin_inset Quotes erd
-\end_inset
-
-.
- Instead, try 
-\begin_inset Quotes eld
-\end_inset
-
-R.
- B.
- G.
- thanks
-\begin_inset Formula $\ldots$
-\end_inset
-
-
-\begin_inset Quotes erd
-\end_inset
-
-.
- Put sponsor acknowledgments in the unnumbered footnote on the first page.
-\end_layout
-
-\begin_layout Section*
-References
-\end_layout
-
-\begin_layout Standard
-Please number citations consecutively within brackets 
-\begin_inset CommandInset citation
-LatexCommand cite
-key "b1"
-
-\end_inset
-
-.
- The sentence punctuation follows the bracket 
-\begin_inset CommandInset citation
-LatexCommand cite
-key "b2"
-
-\end_inset
-
-.
- Refer simply to the reference number, as in 
-\begin_inset CommandInset citation
-LatexCommand cite
-key "b3"
-
-\end_inset
-
-—do not use 
-\begin_inset Quotes eld
-\end_inset
-
-Ref.
+Finally it was decided to merge all strategies developed in order to found
+ a better perfomance over time.
+ So first at all we look to fit better the hypermeters for DBscan clustering.
+ To do this we compare our target driver with other drivers, this is done
+ passing throught a PCA compression and then running a DBSCAN algorithm
+ to look if 2 clusters are distinguishible between them.
  
-\begin_inset CommandInset citation
-LatexCommand cite
-key "b3"
+\end_layout
+
+\begin_layout Standard
+\begin_inset Float figure
+placement H
+wide false
+sideways false
+status open
+
+\begin_layout Plain Layout
+\begin_inset Graphics
+	filename General Logic.jpg
+	lyxscale 50
+	scale 15
 
 \end_inset
 
 
-\begin_inset Quotes erd
-\end_inset
+\end_layout
 
- or 
-\begin_inset Quotes eld
-\end_inset
+\begin_layout Plain Layout
+\begin_inset Caption Standard
 
-reference 
-\begin_inset CommandInset citation
-LatexCommand cite
-key "b3"
+\begin_layout Plain Layout
+Strategy 
+\end_layout
 
 \end_inset
 
 
-\begin_inset Quotes erd
-\end_inset
+\end_layout
 
- except at the beginning of a sentence: 
-\begin_inset Quotes eld
-\end_inset
-
-Reference 
-\begin_inset CommandInset citation
-LatexCommand cite
-key "b3"
-
-\end_inset
-
- was the first 
-\begin_inset Formula $\ldots$
-\end_inset
-
-
-\begin_inset Quotes erd
 \end_inset
 
 
 \end_layout
 
 \begin_layout Standard
-Number footnotes separately in superscripts.
- Place the actual footnote at the bottom of the column in which it was cited.
- Do not put footnotes in the abstract or reference list.
- Use letters for table footnotes.
+\noindent
+The procedure continue until go over all drivers.
+ The result of good clusters are saved in a set, and then this one is loaded
+ into a Random Forest training.
+ For this test we get a score and we follow a semi supervised leraning.
+ This procedure is executed over 10,000 with different hypermater trials
+ and it was look to find the best match with the best score.
+ This was done with multiprocessing programing and paralellism techniques.
+ 
 \end_layout
 
 \begin_layout Standard
-Unless there are six authors or more give all authors' names; do not use
- 
-\begin_inset Quotes eld
-\end_inset
+\begin_inset Float figure
+placement H
+wide false
+sideways false
+status open
 
-et al.
-\begin_inset Quotes erd
-\end_inset
-
-.
- Papers that have not been published, even if they have been submitted for
- publication, should be cited as 
-\begin_inset Quotes eld
-\end_inset
-
-unpublished
-\begin_inset Quotes erd
-\end_inset
-
- 
-\begin_inset CommandInset citation
-LatexCommand cite
-key "b4"
+\begin_layout Plain Layout
+\align center
+\begin_inset Graphics
+	filename ALLstrategies.png
+	lyxscale 50
+	scale 30
 
 \end_inset
 
-.
- Papers that have been accepted for publication should be cited as 
-\begin_inset Quotes eld
-\end_inset
 
-in press
-\begin_inset Quotes erd
-\end_inset
+\begin_inset Caption Standard
 
- 
-\begin_inset CommandInset citation
-LatexCommand cite
-key "b5"
+\begin_layout Plain Layout
+Results of mixed strategy
+\end_layout
 
 \end_inset
 
-.
- Capitalize only the first word in a paper title, except for proper nouns
- and element symbols.
+
+\end_layout
+
+\end_inset
+
+
 \end_layout
 
 \begin_layout Standard
-For papers published in translation journals, please give the English citation
- first, followed by the original foreign-language citation 
-\begin_inset CommandInset citation
-LatexCommand cite
-key "b6"
+In this mixed strategies algorithm the curves starts at 0 an then rise up
+ smoother than the one with just random forest.
+ 
+\end_layout
 
-\end_inset
+\begin_layout Section
+Conclusion
+\end_layout
 
-.
+\begin_layout Standard
+In this project we have a classical situation between variance and bias.
+ In the first machine learning aproach with just random forest the system
+ has higher variance but less bias, and over the mixed trategy it has less
+ variance and bias, because DSCAN preselection.
+ 
 \end_layout
 
 \begin_layout Bibliography
@@ -2352,7 +1010,7 @@ key "b1"
 
  Department of Public Services.
  (2021, July 5).
- Vehicle-GPS-Data-Department-of-Public-Services.
+ Vehicle-GPS-Daa-Department-of-Public-Services.
  Citty of Cincinnati.
  https://data.cincinnati-oh.gov/Efficient-Service-Delivery/Vehicle-GPS-Data-Depart
 ment-of-Public-Services/b56d-ydmm
@@ -2380,26 +1038,11 @@ key "b3"
 
 \end_inset
 
- I.
- S.
- Jacobs and C.
- P.
- Bean, 
-\begin_inset Quotes eld
-\end_inset
-
-Fine particles, thin films and exchange anisotropy,
-\begin_inset Quotes erd
-\end_inset
-
- in Magnetism, vol.
- III, G.
- T.
- Rado and H.
- Suhl, Eds.
- New York: Academic, 1963, pp.
- 271–350.
- 
+ Wojtusiak, J., & Mogharab Nia, R.
+ (2021).
+ Location prediction using GPS trackers: Can machine learning help locate
+ the missing people with dementia? Internet of Things, 13, 100035.
+ https://doi.org/10.1016/j.iot.2019.01.002
 \end_layout
 
 \begin_layout Bibliography
@@ -2409,17 +1052,11 @@ key "b4"
 
 \end_inset
 
- K.
- Elissa, 
-\begin_inset Quotes eld
-\end_inset
-
-Title of paper if known,
-\begin_inset Quotes erd
-\end_inset
-
- unpublished.
- 
+ Cai, L., Li, S., Wang, S., & Liang, Y.
+ (2017).
+ GPS Trajectory Clustering and Visualization Analysis.
+ Annals of Data Science, 5(1), 29–42.
+ https://doi.org/10.1007/s40745-017-0131-2
 \end_layout
 
 \begin_layout Bibliography
@@ -2429,88 +1066,12 @@ key "b5"
 
 \end_inset
 
- R.
- Nicole, 
-\begin_inset Quotes eld
-\end_inset
-
-Title of paper with only first word capitalized,
-\begin_inset Quotes erd
-\end_inset
-
- J.
- Name Stand.
- Abbrev., in press.
- 
-\end_layout
-
-\begin_layout Bibliography
-\begin_inset CommandInset bibitem
-LatexCommand bibitem
-key "b6"
-
-\end_inset
-
- Y.
- Yorozu, M.
- Hirano, K.
- Oka, and Y.
- Tagawa, 
-\begin_inset Quotes eld
-\end_inset
-
-Electron spectroscopy studies on magneto-optical media and plastic substrate
- interface,
-\begin_inset Quotes erd
-\end_inset
-
- IEEE Transl.
- J.
- Magn.
- Japan, vol.
- 2, pp.
- 740–741, August 1987 [Digests 9th Annual Conf.
- Magnetics Japan, p.
- 301, 1982].
- 
-\end_layout
-
-\begin_layout Bibliography
-\begin_inset CommandInset bibitem
-LatexCommand bibitem
-key "b7"
-
-\end_inset
-
- M.
- Young, The Technical Writer's Handbook.
- Mill Valley, CA: University Science, 1989.
- 
-\end_layout
-
-\begin_layout Standard
-\begin_inset VSpace 12pt
-\end_inset
-
- 
-\begin_inset ERT
-status collapsed
-
-\begin_layout Plain Layout
-
-
-\backslash
-color{red}
-\end_layout
-
-\end_inset
-
- IEEE conference templates contain guidance text for composing and formatting
- conference papers.
- Please ensure that all template text is removed from your conference paper
- prior to submission to the conference.
- Failure to remove the template text from your paper may result in your
- paper not being published.
+ Kumar, V.
+ (2019, September 10).
+ Random forests and decision trees from scratch in python.
+ Medium.
+ https://towardsdatascience.com/random-forests-and-decision-trees-from-scratch-in
+-python-3e4fa5ae4249
 \end_layout
 
 \end_body

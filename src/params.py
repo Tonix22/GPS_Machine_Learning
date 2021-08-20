@@ -13,4 +13,4 @@ PLT_PCA        = False
 PLT_ENABLE     = False
 PLT_COVARIANCE = False
 
-DBSCAN_NORMALIZED = False
+DBSCAN_NORMALIZED = True

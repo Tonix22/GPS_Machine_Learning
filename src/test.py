@@ -19,10 +19,10 @@ def build_forest(set):
     X = np.column_stack((X,wfd))
     X = np.column_stack((X,set.filter_by_name['REASONS'].to_numpy()))
     #print("build Forest")
-    set.Random_Forest_analsysis(X,Y,20,4)
+    set.Random_Forest_analsysis(X,Y,15,4)
     #print("Test Forest")
 
-    set.filter_one_sample(153,2) #testing 
+    set.filter_one_sample(153,1) #testing 
     testing_size = len(set.filter_by_name)-1
     it_is = []
 
@@ -40,43 +40,65 @@ def build_forest(set):
         #print("avg_"+str(n)+": "+str(avg_recognized))
     
     set.plot_generic(it_is)
-    set.plot_map()
+    #set.plot_map()
+    return max(it_is)
+
+def build_forest_2(set):
+
+    Y = (set.filter_by_name['ASSET']==153).astype(int).to_numpy()[1:]
+    #np.set_printoptions(threshold=sys.maxsize)
+    #print(Y, file=open("IS_153.log", 'a'))
+    set.PCA_analysis()
+
+    X = set.PCA.mat_reduced
+    #print("build Forest")
+    set.Random_Forest_analsysis(X,Y,5,5)
+    #print("Test Forest")
+
+    set.filter_one_sample(153,2) #testing
+    set.PCA_analysis()
+    testing_size = len(set.PCA.mat_reduced)-1
+    it_is = []
+
+    for n in range (10,testing_size):
+        X = set.PCA.mat_reduced[0:n]
+        var = set.Forest.predict(X)
+        avg_recognized = 1-np.mean(var)
+        it_is.append(avg_recognized)
+        #print("avg_"+str(n)+": "+str(avg_recognized))
+    
+    set.plot_generic(it_is)
+    #set.plot_map()
     return max(it_is)
 
 def random_forest_test():
     set = GPS_data.Data_set_reader()
     set.filter_one_sample(153,0)
-    set.filter_one_sample(153,1)
-#
-    #set.append_frame(320,0)
-    #set.append_frame(194,0)
-    #set.append_frame(377,0)
-    set.append_frame(78,0)
-
-    build_forest(set)
+    set.append_frame(153,1)
+    drivers = [258, 450, 241, 264, 481, 399, 482, 317, 334, 299, 163, 261, 78, 371, 194, 474, 240, 365, 296, 236, 211, 260, 233, 377, 494, 429]
+    for n in drivers:
+        set.append_frame(n,0)
+    
+    build_forest_2(set)
   
 
 
 def PCA_DBSCAN_test():
-    PCA = False
+    PCA = True
     set = GPS_data.Data_set_reader()
+    #set.filter_by_name = set.df
     set.filter_one_sample(153,0)
-    #set.append_frame(320,0)
-    #set.append_frame(194,0)
+    set.append_frame(320,0)
+    set.append_frame(194,0)
     #set.append_frame(377,0)
     #set.append_frame(78,0)
     if(PCA == True):
         set.PCA_analysis()
         set.DBSCAN_analysis(set.PCA.mat_reduced[:,0],set.PCA.mat_reduced[:,1],eps=0.5222222222222223,point=13)
-
-    #other_set = Data_set_reader()
-    #other_set.filter_one_sample(153,1)
-    #other_set.PCA_analysis()
-    #set.DBSCAN.Test_DBSCAN(other_set.PCA.mat_reduced[:,0],other_set.PCA.mat_reduced[:,1])
-
-    lat = set.filter_by_name["LATITUDE"].to_numpy()[1:]
-    lon = set.filter_by_name["LONGITUDE"].to_numpy()[1:]
-    set.DBSCAN_analysis(lon,lat)
+    else:
+        lat = set.filter_by_name["LATITUDE"].to_numpy()[1:]
+        lon = set.filter_by_name["LONGITUDE"].to_numpy()[1:]
+        set.DBSCAN_analysis(lon,lat)
 
 def Better_trainig():
     set = GPS_data.Data_set_reader()
@@ -85,7 +107,7 @@ def Better_trainig():
     n_ids      = []
     for n in IDs:
         set.filter_one_sample(153,0)
-        set.filter_one_sample(153,1)
+        set.append_frame(153,1)
         set.append_frame(n,0)
         set.PCA_analysis() #set.PCA.mat_reduced[0:,0]
         #
@@ -111,6 +133,10 @@ def Better_trainig():
 #
 
 
+
+#******************************************************************
+#******************************************************************
+
 def Find_good_match(ep_s,ep_end,eps_step,id):
     log_name = "output_"+str(id)+".log"
     print("thread Created "+str(id))
@@ -122,24 +148,25 @@ def Find_good_match(ep_s,ep_end,eps_step,id):
     max_score = 0
     score = 0
     for i in range(0,eps_step):
-        print("****"*3)
+        print("//////"*3)
         print("ProcesID: "+ str(id)+" eps: "+str(epsilon[i]))
-        print("*****"*3)
-        for j in range(10,80):
+        print("//////"*3)
+        for j in range(10,100):
             score = 0
             set = GPS_data.Data_set_reader()
             IDs = set.get_all_IDS()
-            #print(len(IDs))
             n_ids      = []
             for n in IDs:
                 set.filter_one_sample(153,0)
+                set.append_frame(153,1)
                 set.append_frame(n,0)
-                set.PCA_analysis() #set.PCA.mat_reduced[0:,0]
-                set.DBSCAN_analysis(set.PCA.mat_reduced[:,[0,1]],set.PCA.mat_reduced[:,2],eps=epsilon[i],point=point[j])
+                set.PCA_analysis()
+                set.DBSCAN_analysis(set.PCA.mat_reduced[:,[0,3]],set.PCA.mat_reduced[:,4],eps=epsilon[i],point=point[j])
                 if(set.DBSCAN.n_clusters_ == 2):
                     n_ids.append(n)
             IDs = n_ids
             print(IDs, file=open(log_name, 'a'))
+
             if not IDs:
                 print("***"*10, file=open(log_name, 'a'))
                 print("No candidates", file=open(log_name, 'a'))
@@ -150,11 +177,10 @@ def Find_good_match(ep_s,ep_end,eps_step,id):
 
             set.filter_one_sample(153,0)
             set.append_frame(153,1)
-
             for n in IDs:
                 set.append_frame(n,0)
 
-            score = build_forest(set)
+            score = build_forest_2(set)
 
             print("***"*10, file=open(log_name, 'a'))
             print("score: "+str(score), file=open(log_name, 'a'))

@@ -69,7 +69,7 @@ class Feature_Generator():
         
         #samples_time_diff = self.normalize_1d(samples_time_diff)
 
-        avg_sample_rate = np.max(samples_time_diff)
+        avg_sample_rate = np.median(samples_time_diff)
         self.Generate_diffs(df)
        
         #avg and std model
@@ -79,14 +79,14 @@ class Feature_Generator():
         xmin, xmax = mu-4*std,mu+4*std
         x = np.linspace(xmin, xmax, len(self.diffs))
         normal_dist = norm.pdf(x, mu, std)
-        diff_threshold = x[(len(self.diffs)*90)//100]
+        diff_threshold = x[(len(self.diffs)*50)//100]
 
         j = 0
         for i in range(df.index[0]+1,df.index[0]+time_diffs_size-1):
 
             reason = df['REASONS'][i]
 
-            if(self.diffs[j] <= diff_threshold and reason!=7): # reason 7 = device is on
+            if(self.diffs[j] <= diff_threshold and reason!=7): # reason 7 = device is off
                 self.wfd[j]   =  samples_time_diff[j]/avg_sample_rate
             else:
                 self.wfd[j] = 1
